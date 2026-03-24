@@ -376,84 +376,6 @@
   .drawdown-badge { color:var(--danger); }
   .streak-badge   { color:var(--warn); }
 
-  /* ===== OPERATION MODE SELECTOR ===== */
-  .mode-selector {
-    display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:12px;
-  }
-  .mode-btn {
-    padding:10px 8px; border-radius:10px; border:1px solid var(--border);
-    background:var(--panel2); cursor:pointer; transition:all .2s;
-    text-align:center; font-family:'Space Mono',monospace;
-  }
-  .mode-btn:hover { border-color:var(--accent); }
-  .mode-btn.active-auto { border-color:var(--accent); background:rgba(0,229,160,0.08); }
-  .mode-btn.active-manual { border-color:var(--accent2); background:rgba(59,158,255,0.08); }
-  .mode-btn-icon { font-size:20px; margin-bottom:4px; }
-  .mode-btn-name { font-size:11px; font-weight:700; color:var(--text); }
-  .mode-btn-desc { font-size:9px; color:var(--muted); margin-top:2px; }
-
-  /* ===== MANUAL OPERATION PANELS ===== */
-  .manual-panels {
-    display:flex; flex-direction:column; gap:10px;
-  }
-  .manual-panel {
-    background:var(--panel2); border:1px solid var(--border);
-    border-radius:14px; overflow:hidden; transition:all .3s;
-  }
-  .manual-panel.active { border-color:rgba(59,158,255,0.3); }
-  .manual-panel-header {
-    display:flex; align-items:center; gap:8px; padding:10px 12px;
-    background:var(--panel); border-bottom:1px solid var(--border);
-  }
-  .manual-panel-num {
-    width:22px; height:22px; border-radius:50%; background:var(--accent2);
-    color:#000; font-size:11px; font-weight:800; font-family:'Space Mono',monospace;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  }
-  .manual-panel-title { font-size:11px; font-weight:700; font-family:'Space Mono',monospace; flex:1; }
-  .manual-panel-close {
-    width:22px; height:22px; border:none; background:rgba(255,77,106,0.1);
-    border-radius:50%; color:var(--danger); cursor:pointer; font-size:12px;
-    display:flex; align-items:center; justify-content:center; transition:all .2s;
-  }
-  .manual-panel-close:hover { background:rgba(255,77,106,0.25); }
-  .manual-panel-body { padding:12px; }
-
-  /* Instrument picker inside manual panel */
-  .manual-inst-select {
-    width:100%; background:var(--bg); border:1px solid var(--border);
-    color:var(--text); padding:8px 10px; border-radius:8px;
-    font-family:'Space Mono',monospace; font-size:11px; outline:none;
-    margin-bottom:10px; transition:border-color .2s;
-  }
-  .manual-inst-select:focus { border-color:var(--accent2); }
-
-  /* Manual signal display */
-  .manual-signal {
-    display:flex; align-items:center; gap:8px; padding:8px 10px;
-    border-radius:8px; margin-bottom:8px; font-family:'Space Mono',monospace;
-    font-size:11px; font-weight:700;
-  }
-  .manual-signal.buy     { background:rgba(0,229,160,0.08);  border:1px solid rgba(0,229,160,0.25);  color:var(--accent); }
-  .manual-signal.sell    { background:rgba(255,77,106,0.08); border:1px solid rgba(255,77,106,0.25); color:var(--danger); }
-  .manual-signal.neutral { background:rgba(71,85,105,0.08);  border:1px solid var(--border);          color:var(--muted); }
-
-  /* Manual stats row */
-  .manual-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:8px; }
-  .manual-stat { background:var(--bg); border-radius:7px; padding:6px; text-align:center; border:1px solid var(--border); }
-  .manual-stat-val { font-size:12px; font-weight:800; font-family:'Space Mono',monospace; }
-  .manual-stat-lbl { font-size:8px; color:var(--muted); margin-top:1px; }
-
-  /* Add panel button */
-  .add-panel-btn {
-    width:100%; padding:12px; border:2px dashed var(--border); border-radius:12px;
-    background:transparent; color:var(--muted); cursor:pointer; font-family:'Syne',sans-serif;
-    font-size:13px; font-weight:700; transition:all .2s; display:flex;
-    align-items:center; justify-content:center; gap:8px;
-  }
-  .add-panel-btn:hover { border-color:var(--accent2); color:var(--accent2); background:rgba(59,158,255,0.04); }
-  .add-panel-btn:disabled { opacity:0.4; cursor:not-allowed; }
-
   /* ===== MULTI-OPERATION CARDS ===== */
   .ops-container {
     display:flex; gap:8px; margin-bottom:12px;
@@ -1129,7 +1051,6 @@
     <button class="tab active" onclick="switchTab('bot')">🤖 Bot</button>
     <button class="tab" onclick="switchTab('indicators')">📊 Indicadores</button>
     <button class="tab" onclick="switchTab('history')">📋 Historial</button>
-    <button class="tab" onclick="switchTab('history')">📋 Historial</button>
     <button class="tab" onclick="switchTab('opt')">🧬 Optimizador</button>
   </div>
 
@@ -1688,21 +1609,7 @@
             </div>
           </div>
 
-          <!-- MODE SELECTOR -->
-          <div class="mode-selector" style="margin-top:12px">
-            <div class="mode-btn active-auto" id="modeAutoBtn" onclick="setOperationMode('auto',this)">
-              <div class="mode-btn-icon">🤖</div>
-              <div class="mode-btn-name">AUTO</div>
-              <div class="mode-btn-desc">IA decide todo</div>
-            </div>
-            <div class="mode-btn" id="modeManualBtn" onclick="setOperationMode('manual',this)">
-              <div class="mode-btn-icon">🎮</div>
-              <div class="mode-btn-name">MANUAL</div>
-              <div class="mode-btn-desc">Tú eliges pares</div>
-            </div>
-          </div>
-
-          <button class="btn btn-start" id="btnStart" onclick="startBot()" style="margin-top:6px">▶ INICIAR BOT</button>
+          <button class="btn btn-start" id="btnStart" onclick="startBot()" style="margin-top:12px">▶ INICIAR BOT</button>
           <button class="btn btn-stop" id="btnStop" onclick="stopBot()">■ DETENER</button>
         </div>
 
@@ -1752,10 +1659,10 @@
       <!-- RIGHT -->
       <div style="display:flex;flex-direction:column;gap:14px">
 
-        <!-- MULTI-OPERATION CARDS (AUTO MODE) -->
-        <div class="panel" style="padding:10px" id="autoOpsPanel">
+        <!-- OPERACIONES ACTIVAS -->
+        <div class="panel" style="padding:10px">
           <div style="font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
-            <span>⚡ OPERACIONES ACTIVAS — AUTO</span>
+            <span>⚡ OPERACIONES ACTIVAS</span>
             <span id="opsCount" style="color:var(--accent)">0 / 3</span>
           </div>
           <div class="ops-container" id="opsContainer">
@@ -1763,14 +1670,6 @@
               Sin operaciones activas.<br>Inicia el bot para comenzar.
             </div>
           </div>
-        </div>
-
-        <!-- MANUAL OPERATION PANELS -->
-        <div id="manualOpsPanel" style="display:none">
-          <div class="manual-panels" id="manualPanelsContainer"></div>
-          <button class="add-panel-btn" id="addPanelBtn" onclick="addManualPanel()" style="margin-top:8px">
-            <span style="font-size:18px">+</span> Agregar operación manual
-          </button>
         </div>
 
         <!-- NEURAL NETWORK PANEL -->
@@ -2224,21 +2123,21 @@ const BINANCE_FUTURES_SYMBOLS = {
 };
 
 // ── WebSocket helpers ────────────────────────────────────────────
-function wsLog(msg, type='warn') { addLog(msg, type); }
+function wsLog(msg, type) { addLog(msg, type||'warn'); }
 
 /** Build a combined stream URL for all supported symbols */
 function buildSpotStreamUrl() {
   const streams = Object.values(BINANCE_SYMBOLS)
     .map(s => s.toLowerCase() + '@trade')
     .join('/');
-  return `${TESTNET_WS_SPOT}/${streams}`;
+  return TESTNET_WS_SPOT+"/"+streams;
 }
 
 function buildFuturesStreamUrl() {
   const streams = Object.values(BINANCE_FUTURES_SYMBOLS)
     .map(s => s.toLowerCase() + '@aggTrade')
     .join('/');
-  return `${TESTNET_WS_FUTURE}/${streams}`;
+  return TESTNET_WS_FUTURE+"/"+streams;
 }
 
 /** Connect Spot WebSocket */
@@ -2262,7 +2161,7 @@ function connectSpotWS() {
   };
   wsSpot.onerror = () => wsLog('⚠ WS Spot error', 'sell');
   wsSpot.onclose = (ev) => {
-    wsLog(`🔌 WS Spot cerrado (${ev.code}) — reintentando...`, 'warn');
+    wsLog('🔌 WS Spot cerrado ('+ev.code+') — reintentando...', 'warn');
     updateWsBadge();
     if(!apiConnected) return;
     if(wsRetry.spot < WS_MAX_RETRY) {
@@ -2360,12 +2259,11 @@ async function connectAPI() {
 
   // Show balance placeholder
   const balDiv = document.getElementById('apiBalance');
-  if(balDiv) balDiv.innerHTML = `
-    <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;padding:4px 0">
-      <div style="color:var(--accent);font-weight:700;margin-bottom:4px">✓ Claves validadas</div>
-      <div>Saldo disponible en Testnet</div>
-      <div style="color:var(--muted);font-size:9px;margin-top:2px">Precios via WebSocket en tiempo real</div>
-    </div>`;
+  if(balDiv) balDiv.innerHTML = '<div style="font-size:10px;color:var(--muted);font-family:Space Mono,monospace;padding:4px 0">' +
+      '<div style="color:var(--accent);font-weight:700;margin-bottom:4px">✓ Claves validadas</div>' +
+      '<div>Saldo disponible en Testnet</div>' +
+      '<div style="color:var(--muted);font-size:9px;margin-top:2px">Precios via WebSocket en tiempo real</div>' +
+      '</div>';
 
   // Update UI
   document.getElementById('apiForm').style.display = 'none';
@@ -2386,20 +2284,19 @@ async function connectAPI() {
   try {
     // Try REST in background for balance (may fail due to CORS — that's OK)
     const ts = Date.now();
-    const qs = `timestamp=${ts}&recvWindow=60000`;
+    const qs = "timestamp="+ts+"&recvWindow=60000";
     const sig = await hmacSHA256(secret, qs);
-    const res = await fetch(`${TESTNET_BASE}/v3/account?${qs}&signature=${sig}`, {
+    const res = await fetch(TESTNET_BASE+"/v3/account?"+qs+"&signature="+sig, {
       headers: { 'X-MBX-APIKEY': key }
     });
     if(res.ok) {
       const data = await res.json();
       const balances = (data.balances||[]).filter(b=>parseFloat(b.free)>0).slice(0,6);
       if(balances.length > 0 && balDiv) {
-        balDiv.innerHTML = balances.map(b=>`
-          <div class="api-balance-item">
-            <div class="api-balance-coin">${b.asset}</div>
-            <div class="api-balance-val">${parseFloat(b.free).toFixed(4)}</div>
-          </div>`).join('');
+        balDiv.innerHTML = balances.map(function(b) {
+          return '<div class="api-balance-item"><div class="api-balance-coin">' + b.asset + '</div>' +
+            '<div class="api-balance-val">' + parseFloat(b.free).toFixed(4) + '</div></div>';
+        }).join('');
       }
     }
   } catch(_) {
@@ -2540,7 +2437,7 @@ function selInst(btn, sym, cat) {
   document.getElementById('instPriceDisplay').textContent=inst.base.toFixed(inst.decimals);
   document.getElementById('instPriceChg').textContent='—';
   if(running){stopBot();prices=[];rsiHistory=[];macdHistory=[];macdSigHistory=[];macdHistHistory=[];tradeMarkers=[];}
-  addLog(`📌 ${sym} seleccionado`,'warn');
+  addLog('📌 '+sym+' seleccionado','warn');
   refreshAmountDisplay();
   updateLiveBadge(sym);
 }
@@ -2639,10 +2536,10 @@ function updateDropdownRates() {
     if(code === 'USD' || code === 'USDT') return;
     const rate = BASE_RATES[code];
     const sym = CURR_SYMS[code] || '';
-    if(['BTC','ETH','SOL'].includes(code)) el.textContent = `≈ ${sym}${rate.toFixed(6)}`;
-    else if(['BNB','XRP'].includes(code)) el.textContent = `≈ ${sym}${rate.toFixed(3)}`;
-    else if(['JPY','KRW','COP','CLP','ARS','INR'].includes(code)) el.textContent = `≈ ${sym}${Math.round(rate).toLocaleString()}`;
-    else el.textContent = `≈ ${sym}${rate.toFixed(3)}`;
+    if(['BTC','ETH','SOL'].includes(code)) el.textContent = '≈ '+sym+rate.toFixed(6);
+    else if(['BNB','XRP'].includes(code)) el.textContent = '≈ '+sym+rate.toFixed(3);
+    else if(['JPY','KRW','COP','CLP','ARS','INR'].includes(code)) el.textContent = '≈ '+sym+Math.round(rate).toLocaleString();
+    else el.textContent = '≈ '+sym+rate.toFixed(3);
   });
 }
 
@@ -2667,7 +2564,7 @@ function selectCurrency(code, icon, name, type, el) {
   document.getElementById('currDropBtn').classList.remove('open');
   // Refresh amount display
   refreshAmountDisplay();
-  addLog(`💱 Divisa: ${icon} ${code} — ${name}`, 'warn');
+  addLog('💱 Divisa: '+icon+' '+code+' — '+name, 'warn');
 }
 
 function refreshAmountDisplay() {
@@ -2680,7 +2577,7 @@ function refreshAmountDisplay() {
   // Show USD equivalent if not USD
   const convEl = document.getElementById('amountConverted');
   if(code !== 'USD' && code !== 'USDT') {
-    convEl.textContent = `≈ ${formatted} ${code}`;
+    convEl.textContent = '≈ '+formatted+' '+code;
   } else {
     convEl.textContent = '';
   }
@@ -2710,7 +2607,7 @@ function setAmount(val, btn) {
   document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
   if(btn) btn.classList.add('active');
   refreshAmountDisplay();
-  addLog(`💰 Monto: ${val} ${selectedCurrency.code}`, 'warn');
+  addLog('💰 Monto: '+val+' '+selectedCurrency.code, 'warn');
 }
 
 function setCustomAmount() {
@@ -2721,7 +2618,7 @@ function setCustomAmount() {
   document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('customAmount').value = '';
   refreshAmountDisplay();
-  addLog(`💰 Monto personalizado: ${val} ${selectedCurrency.code}`, 'warn');
+  addLog('💰 Monto personalizado: '+val+' '+selectedCurrency.code, 'warn');
 }
 
 function setMode(mode, btn) {
@@ -2747,7 +2644,7 @@ function setMode(mode, btn) {
 function updateAmountSummary() {
   const code = selectedCurrency.code;
   const modeText = tradeMode==='buy'?'Compra':tradeMode==='sell'?'Venta':'Compra+Venta';
-  document.getElementById('amountSummary').textContent = `${tradeAmount} ${code} · ${modeText}`;
+  document.getElementById('amountSummary').textContent = tradeAmount+' '+code+' · '+modeText;
 }
 
 function updateCurrencyDisplay() { refreshAmountDisplay(); }
@@ -2859,7 +2756,7 @@ let indEMA = false;
 let bbHistory = { upper:[], mid:[], lower:[] };
 let emaHistory = { fast:[], slow:[] };
 
-function calcBollinger(prices, period=20, multiplier=2) {
+function calcBollinger(prices, period, multiplier) { if(!period)period=20; if(!multiplier)multiplier=2;
   if(prices.length < period) return { upper: prices[prices.length-1], mid: prices[prices.length-1], lower: prices[prices.length-1] };
   const slice = prices.slice(-period);
   const mid = slice.reduce((a,b)=>a+b,0)/period;
@@ -2906,7 +2803,7 @@ function makeOffscreen(w, h) {
 }
 
 function commitToScreen(off, target) {
-  const { w, h } = safeResize(target);
+  var _sr=safeResize(target); var w=_sr.w, h=_sr.h;
   if(w === 0 || h === 0) return;
   target.getContext('2d').drawImage(off, 0, 0, w, h);
 }
@@ -2932,14 +2829,14 @@ function drawBollinger() {
     bbArr.push(calcBollinger(prices.slice(0, startIdx + i + 1)));
   }
 
-  const allVals = bbArr.flatMap(b => [b.upper, b.lower]);
-  const mn = Math.min(...allVals) * 0.9992;
-  const mx = Math.max(...allVals) * 1.0008;
+  var allVals = []; bbArr.forEach(function(b){ allVals.push(b.upper); allVals.push(b.lower); });
+  const mn = Math.min.apply(null, allVals) * 0.9992;
+  const mx = Math.max.apply(null, allVals) * 1.0008;
   const range = mx - mn || 1;
   const toY = v => h - ((v - mn) / range) * h;
   const toX = i => (i / Math.max(n - 1, 1)) * w;
 
-  const { canvas: off, ctx: cx } = makeOffscreen(w, h);
+  var _mo=makeOffscreen(w,h); var off=_mo.canvas, cx=_mo.ctx;
   cx.fillStyle = '#0d1117'; cx.fillRect(0, 0, w, h);
 
   // Grid
@@ -3017,14 +2914,14 @@ function drawEMA() {
   }
 
   const data = prices.slice(-n);
-  const allVals = [...data, ...fastArr, ...slowArr];
-  const mn = Math.min(...allVals) * 0.9992;
-  const mx = Math.max(...allVals) * 1.0008;
+  var allVals = data.concat(fastArr).concat(slowArr);
+  const mn = Math.min.apply(null, allVals) * 0.9992;
+  const mx = Math.max.apply(null, allVals) * 1.0008;
   const range = mx - mn || 1;
   const toY = v => h - ((v - mn) / range) * h;
   const toX = i => (i / Math.max(n - 1, 1)) * w;
 
-  const { canvas: off, ctx: cx } = makeOffscreen(w, h);
+  var _mo=makeOffscreen(w,h); var off=_mo.canvas, cx=_mo.ctx;
   cx.fillStyle = '#0d1117'; cx.fillRect(0, 0, w, h);
 
   // Grid
@@ -3159,7 +3056,7 @@ function toggleIndicator(ind, checkbox) {
     statusEl.style.color = isOn ? 'var(--accent2)' : 'var(--muted)';
   }
   // Nota en log aclarando que la IA siempre los usa
-  addLog(`👁 ${ind.toUpperCase()} visual ${isOn ? 'ON' : 'OFF'} — IA siempre activa`, isOn ? 'buy' : 'warn');
+  addLog('👁 ' + ind.toUpperCase() + ' visual ' + (isOn ? 'ON' : 'OFF') + ' — IA siempre activa', isOn ? 'buy' : 'warn');
   updateChartVisibility();
 }
 
@@ -3172,28 +3069,12 @@ function updateIndicatorLabels() {
   const mSig  = document.getElementById('macdSignal').value;
   const el1   = document.getElementById('rsi-params-label');
   const el2   = document.getElementById('macd-params-label');
-  if(el1) el1.textContent = `Período: ${rsiP} | OB: ${rsiOB} | OS: ${rsiOS}`;
-  if(el2) el2.textContent = `Fast: ${mF} | Slow: ${mS} | Signal: ${mSig}`;
+  if(el1) el1.textContent = 'Período: '+rsiP+' | OB: '+rsiOB+' | OS: '+rsiOS;
+  if(el2) el2.textContent = 'Fast: '+mF+' | Slow: '+mS+' | Signal: '+mSig;
 }
 
 // ======================== RESIZE / REDRAW ========================
-function resizeAllCanvases() {
-  // Usar safeResize — solo redimensiona si el contenedor cambió
-  ['priceChart','rsiChart','macdChart','bbChart','emaChart'].forEach(id => {
-    const c = document.getElementById(id);
-    if(c) safeResize(c);
-  });
-}
 
-function redrawAllCharts() {
-  drawPrice();
-  const rsiOB = +document.getElementById('rsiOB').value;
-  const rsiOS = +document.getElementById('rsiOS').value;
-  if(indRSI)  drawRSI(rsiOB, rsiOS);
-  if(indMACD) drawMACD();
-  if(indBB)   drawBollinger();
-  if(indEMA)  drawEMA();
-}
 // ======================== TRADE HISTORY ========================
 let tradeHistory = [];
 let opCounter = 0;
@@ -3225,8 +3106,8 @@ function updateHistorySummary() {
   const currCode = selectedCurrency.code;
   const currSym = CURR_SYMS[currCode] || currCode+' ';
 
-  const best  = allAmounts.length > 0 ? formatConverted(Math.max(...allAmounts), currCode) : '—';
-  const worst = allAmounts.length > 0 ? formatConverted(Math.min(...allAmounts), currCode) : '—';
+  const best  = allAmounts.length > 0 ? formatConverted(Math.max.apply(null, allAmounts), currCode) : '—';
+  const worst = allAmounts.length > 0 ? formatConverted(Math.min.apply(null, allAmounts), currCode) : '—';
   const total_amt = allAmounts.reduce((a,b)=>a+b, 0);
 
   document.getElementById('hst_total').textContent = total;
@@ -3496,7 +3377,7 @@ function drawPrice(){
   if(prices.length<2){ c.width=w; c.height=h; c.getContext('2d').drawImage(off,0,0); return; }
 
   const data=prices.slice(-100);
-  const mn=Math.min(...data)*0.9994, mx=Math.max(...data)*1.0006, range=mx-mn||1;
+  const mn=Math.min.apply(null, data)*0.9994, mx=Math.max.apply(null, data)*1.0006, range=mx-mn||1;
   const toY=v=>h-((v-mn)/range)*(h-20)-10;
   const n=data.length;
 
@@ -3513,7 +3394,7 @@ function drawPrice(){
   cx.setLineDash([]);
 
   // Gradient fill under price line
-  const g=cx.createLinearGradient(0,toY(Math.max(...data)),0,h);
+  const g=cx.createLinearGradient(0,toY(Math.max.apply(null, data)),0,h);
   g.addColorStop(0,'rgba(0,229,160,0.18)'); g.addColorStop(0.5,'rgba(0,229,160,0.05)'); g.addColorStop(1,'rgba(0,229,160,0)');
   cx.beginPath();
   data.forEach((p,i)=>{const x=(i/(n-1))*w,y=toY(p);i===0?cx.moveTo(x,y):cx.lineTo(x,y);});
@@ -3602,7 +3483,7 @@ function drawMACD(){
   const n=Math.min(macdHistory.length,120);
   if(n<2)return;
   const mArr=macdHistory.slice(-n),sArr=macdSigHistory.slice(-n),hArr=macdHistHistory.slice(-n);
-  const allV=[...mArr,...sArr,...hArr],mn=Math.min(...allV)*1.15,mx=Math.max(...allV)*1.15,range=mx-mn||0.0001;
+  var allV=mArr.concat(sArr).concat(hArr),mn=Math.min.apply(null, allV)*1.15,mx=Math.max.apply(null, allV)*1.15,range=mx-mn||0.0001;
   const toY=v=>PT+ch*(1-(v-mn)/range),zeroY=toY(0);
   cx.strokeStyle='rgba(120,120,140,0.25)';cx.lineWidth=1;cx.setLineDash([4,3]);
   cx.beginPath();cx.moveTo(PL,zeroY);cx.lineTo(PL+cw,zeroY);cx.stroke();cx.setLineDash([]);
@@ -3627,13 +3508,13 @@ function drawMACD(){
 }
 
 // ======================== LOG ========================
-function addLog(msg,type=''){
+function addLog(msg,type){if(!type)type='';
   const now=new Date(),t=now.toTimeString().split(' ')[0];
   const body=document.getElementById('logBody');
-  const e=document.createElement('div');e.className=`log-entry ${type}`;
-  e.innerHTML=`<span class="t">${t}</span>${msg}`;
+  const e=document.createElement('div');e.className='log-entry '+type;
+  e.innerHTML='<span class="t">'+t+'</span>'+msg;
   body.prepend(e);logCount++;
-  document.getElementById('logCount').textContent=`${logCount} eventos`;
+  document.getElementById('logCount').textContent=logCount+' eventos';
   if(body.children.length>60)body.removeChild(body.lastChild);
 }
 
@@ -3682,7 +3563,7 @@ function tick(){
 
   document.getElementById('rsiPeriodLabel').textContent=cfg.rsiPeriod;
   document.getElementById('rsiValueBadge').textContent=rsi.toFixed(2);
-  document.getElementById('macdParamsLabel').textContent=`${cfg.macdFast} ${cfg.macdSlow} close ${cfg.macdSignal}`;
+  document.getElementById('macdParamsLabel').textContent=cfg.macdFast+' '+cfg.macdSlow+' close '+cfg.macdSignal;
   document.getElementById('macdLineBadge').textContent=macdData.macd.toFixed(4);
   document.getElementById('macdSigBadge').textContent=macdData.signal.toFixed(4);
   document.getElementById('macdHistBadge').textContent=macdData.hist.toFixed(4);
@@ -3693,15 +3574,15 @@ function tick(){
   if(signal==='BUY'){
     box.classList.add('signal-buy');document.getElementById('sigIcon').textContent='📈';
     document.getElementById('signalText').textContent='SEÑAL DE COMPRA';
-    document.getElementById('signalDetail').textContent=`${currentInst} · ${buyVotes}/4 indicadores · RSI:${rsi.toFixed(1)}`;
+    document.getElementById('signalDetail').textContent=currentInst+' · '+buyVotes+'/4 indicadores · RSI:'+rsi.toFixed(1);
   }else if(signal==='SELL'){
     box.classList.add('signal-sell');document.getElementById('sigIcon').textContent='📉';
     document.getElementById('signalText').textContent='SEÑAL DE VENTA';
-    document.getElementById('signalDetail').textContent=`${currentInst} · ${sellVotes}/4 indicadores · RSI:${rsi.toFixed(1)}`;
+    document.getElementById('signalDetail').textContent=currentInst+' · '+sellVotes+'/4 indicadores · RSI:'+rsi.toFixed(1);
   }else{
     box.classList.add('signal-neutral');document.getElementById('sigIcon').textContent='⏸';
     document.getElementById('signalText').textContent=trendDirection===0?'MERCADO LATERAL':'SIN SEÑAL';
-    document.getElementById('signalDetail').textContent=`RSI:${rsi.toFixed(1)} · Votos B:${buyVotes} V:${sellVotes}`;
+    document.getElementById('signalDetail').textContent='RSI:'+rsi.toFixed(1)+' · Votos B:'+buyVotes+' V:'+sellVotes;
   }
   // Update NN with current market state
   const stochNN = calcStochRSI();
@@ -3868,7 +3749,7 @@ function openOperation(signal, price, sl, tp, currCode) {
   };
   activeOps.push(op);
   renderOps();
-  addLog(`⚡ Op #${id} abierta — ${signal} ${currentInst} @ ${price}`, signal==='BUY'?'buy':'sell');
+  addLog('⚡ Op #'+id+' abierta — '+signal+' '+currentInst+' @ '+price, signal==='BUY'?'buy':'sell');
   return op;
 }
 
@@ -3939,7 +3820,7 @@ function renderOps() {
   const countEl   = document.getElementById('opsCount');
   if(!container) return;
 
-  if(countEl) countEl.textContent = `${activeOps.length} / ${MAX_OPS}`;
+  if(countEl) countEl.textContent = activeOps.length+' / '+MAX_OPS;
 
   // Remove old cards
   container.querySelectorAll('.op-card').forEach(c => c.remove());
@@ -4042,8 +3923,8 @@ function nnLearn(won) {
 
 /** Update NN display */
 function updateNNDisplay(inputs, result) {
-  const { probs, hidden } = nnForward(inputs);
-  const [buyP, sellP, neutP] = probs;
+  var _nn=nnForward(inputs); var probs=_nn.probs, hidden=_nn.hidden;
+  var buyP=probs[0], sellP=probs[1], neutP=probs[2];
   const maxP = Math.max(buyP, sellP, neutP);
   const conf = Math.round(maxP * 100);
 
@@ -4061,7 +3942,7 @@ function updateNNDisplay(inputs, result) {
 
   // Animate hidden nodes
   hidden.forEach((v, i) => {
-    const el = document.getElementById(`nn-h${i}`);
+    const el = document.getElementById('nn-h'+i);
     if(el) el.classList.toggle('active', v > 0.5);
   });
 
@@ -4080,240 +3961,19 @@ function updateNNDisplay(inputs, result) {
   if(sampEl) sampEl.textContent = nnSamples;
 }
 
-  if(sampEl) sampEl.textContent = nnSamples;
-}
-
-// ======================== OPERATION MODE ========================
-let operationMode = 'auto';
-let manualPanels  = [];
-let manualPanelId = 0;
-
-function setOperationMode(mode, btn) {
-  operationMode = mode;
-  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active-auto','active-manual'));
-  if(mode === 'auto') {
-    btn.classList.add('active-auto');
-    document.getElementById('autoOpsPanel').style.display   = 'block';
-    document.getElementById('manualOpsPanel').style.display = 'none';
-    addLog('🤖 Modo AUTO — IA decide las operaciones', 'opt');
-  } else {
-    btn.classList.add('active-manual');
-    document.getElementById('autoOpsPanel').style.display   = 'none';
-    document.getElementById('manualOpsPanel').style.display = 'block';
-    addLog('🎮 Modo MANUAL — tú eliges los instrumentos', 'opt');
-  }
-}
-
-function addManualPanel() {
-  if(manualPanels.length >= MAX_OPS) { addLog('⚠ Máximo 3 paneles manuales', 'warn'); return; }
-  const id = ++manualPanelId;
-  manualPanels.push({ id, inst:'BTC/USD', running:false, interval:null, prices:[], signal:'NEUTRAL', wins:0, losses:0, currentPrice:'—', rsi:'—' });
-  renderManualPanels();
-  const addBtn = document.getElementById('addPanelBtn');
-  if(addBtn) addBtn.disabled = manualPanels.length >= MAX_OPS;
-}
-
-function removeManualPanel(id) {
-  const p = manualPanels.find(p=>p.id===id);
-  if(p && p.interval) clearInterval(p.interval);
-  manualPanels = manualPanels.filter(p=>p.id!==id);
-  renderManualPanels();
-  const addBtn = document.getElementById('addPanelBtn');
-  if(addBtn) addBtn.disabled = false;
-}
-
-function toggleManualPanel(id) {
-  const p = manualPanels.find(p=>p.id===id);
-  if(!p) return;
-  if(p.running) {
-    clearInterval(p.interval); p.interval=null; p.running=false; p.prices=[];
-    addLog(`⏹ Panel #${id} detenido — ${p.inst}`, 'warn');
-  } else {
-    p.running=true; p.prices=[];
-    p.interval = setInterval(()=>tickManualPanel(id), 700);
-    addLog(`▶ Panel #${id} iniciado — ${p.inst}`, 'buy');
-  }
-  renderManualPanels();
-}
-
-function changeManualInst(id, inst) {
-  const p = manualPanels.find(p=>p.id===id);
-  if(!p) return;
-  p.inst=inst; p.prices=[]; p.signal='NEUTRAL'; p.currentPrice='—';
-  if(p.running) { clearInterval(p.interval); p.interval=setInterval(()=>tickManualPanel(id),700); }
-  renderManualPanels();
-}
-
-function tickManualPanel(id) {
-  const p = manualPanels.find(p=>p.id===id);
-  if(!p||!p.running) return;
-  const inst = INSTRUMENTS[p.inst]||INSTRUMENTS['BTC/USD'];
-  const liveP = apiConnected ? getLivePrice(p.inst) : null;
-  const last  = p.prices.length>0 ? p.prices[p.prices.length-1] : inst.base;
-  const np    = liveP ? liveP+(Math.random()-0.5)*liveP*0.0001
-                      : Math.max(last+(Math.random()-0.498)*inst.vol, inst.base*0.85);
-  p.prices.push(np); if(p.prices.length>300) p.prices.shift();
-  p.currentPrice = np.toFixed(inst.decimals);
-
-  if(p.prices.length < 30) { renderManualPanels(); return; }
-
-  const rsi   = calcRSI(p.prices, 14);
-  const macd  = calcMACD(p.prices, 12, 26, 9);
-  const emaF  = calcEMA(p.prices, 9);
-  const emaS  = calcEMA(p.prices, 21);
-  p.rsi = rsi.toFixed(1);
-
-  const score = (rsi<30?1:rsi>70?-1:0) + (macd.macd>macd.signal?1:-1) + (emaF>emaS?1:-1);
-  const prevSig = p.signal;
-  p.signal = score>=2?'BUY':score<=-2?'SELL':'NEUTRAL';
-
-  if(p.signal!=='NEUTRAL' && p.signal!==prevSig && !ksTriggered) {
-    const currCode = selectedCurrency.code;
-    const won = Math.random()>0.42;
-    setTimeout(()=>{
-      const gainAmt=convertAmount(tradeAmount*2,currCode);
-      const lossAmt=convertAmount(tradeAmount,currCode);
-      const fmtG=formatConverted(gainAmt,currCode);
-      const fmtL=formatConverted(lossAmt,currCode);
-      if(won){p.wins++;registerTradeResult(gainAmt);registerProtectionResult(true);addLog(`✓ Panel #${id} GANANCIA +${fmtG}`,'buy');addTradeToHistory(p.inst,p.signal,p.currentPrice,'WIN',gainAmt,currCode);}
-      else{p.losses++;registerTradeResult(-lossAmt);registerProtectionResult(false);addLog(`✗ Panel #${id} PÉRDIDA -${fmtL}`,'sell');addTradeToHistory(p.inst,p.signal,p.currentPrice,'LOSS',-lossAmt,currCode);}
-      trades++;updateAIWeights(won);nnLearn(won);autoSave();renderManualPanels();updateHistorySummary();
-    }, 2000+Math.random()*3000);
-  }
-  renderManualPanels();
-}
-
-function renderManualPanels() {
-  const container = document.getElementById('manualPanelsContainer');
-  if(!container) return;
-  container.innerHTML = '';
-  manualPanels.forEach(function(p) {
-    const sigClass = p.signal==='BUY' ? 'buy' : p.signal==='SELL' ? 'sell' : 'neutral';
-    const sigText  = p.signal==='BUY' ? '📈 SEÑAL COMPRA' : p.signal==='SELL' ? '📉 SEÑAL VENTA' : '⏸ ANALIZANDO';
-    const wr = (p.wins+p.losses) > 0 ? ((p.wins/(p.wins+p.losses))*100).toFixed(0)+'%' : '—';
-    const isRunning = p.running;
-
-    const div = document.createElement('div');
-    div.className = 'manual-panel' + (isRunning ? ' active' : '');
-
-    // Header
-    const header = document.createElement('div');
-    header.className = 'manual-panel-header';
-    header.innerHTML = '<div class="manual-panel-num">' + p.id + '</div>' +
-      '<span class="manual-panel-title">' + (isRunning?'● ':'○ ') + p.inst + '</span>';
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'manual-panel-close';
-    closeBtn.textContent = '✕';
-    closeBtn.onclick = (function(id){ return function(){ removeManualPanel(id); }; })(p.id);
-    header.appendChild(closeBtn);
-    div.appendChild(header);
-
-    // Body
-    const body = document.createElement('div');
-    body.className = 'manual-panel-body';
-
-    // Select
-    const sel = document.createElement('select');
-    sel.className = 'manual-inst-select';
-    sel.disabled = isRunning;
-    sel.onchange = (function(id){ return function(){ changeManualInst(id, this.value); }; })(p.id);
-    const opts = [
-      ['CRYPTO — DATOS REALES', ['BTC/USD','ETH/USD','BNB/USD','SOL/USD','XRP/USD']],
-      ['FOREX — SIMULADO',      ['EUR/USD','GBP/USD','USD/JPY']],
-      ['METALES — SIMULADO',    ['XAU/USD','XAG/USD']]
-    ];
-    opts.forEach(function(g) {
-      const og = document.createElement('optgroup');
-      og.label = g[0];
-      g[1].forEach(function(inst) {
-        const o = document.createElement('option');
-        o.value = inst; o.textContent = inst;
-        if(inst === p.inst) o.selected = true;
-        og.appendChild(o);
-      });
-      sel.appendChild(og);
-    });
-    body.appendChild(sel);
-
-    // Signal
-    const sig = document.createElement('div');
-    sig.className = 'manual-signal ' + sigClass;
-    sig.textContent = sigText;
-    body.appendChild(sig);
-
-    // Stats
-    const stats = document.createElement('div');
-    stats.className = 'manual-stats';
-    stats.innerHTML = '<div class="manual-stat"><div class="manual-stat-val" style="font-size:9px">' + p.currentPrice + '</div><div class="manual-stat-lbl">PRECIO</div></div>' +
-      '<div class="manual-stat"><div class="manual-stat-val c-green">' + p.wins + '</div><div class="manual-stat-lbl">WINS</div></div>' +
-      '<div class="manual-stat"><div class="manual-stat-val c-pur">' + wr + '</div><div class="manual-stat-lbl">WR</div></div>';
-    body.appendChild(stats);
-
-    // Button
-    const btn = document.createElement('button');
-    btn.className = 'btn ' + (isRunning ? 'btn-stop' : 'btn-start');
-    btn.style.cssText = 'padding:8px;font-size:12px';
-    btn.textContent = isRunning ? '■ DETENER' : '▶ INICIAR';
-    btn.onclick = (function(id){ return function(){ toggleManualPanel(id); }; })(p.id);
-    body.appendChild(btn);
-
-    div.appendChild(body);
-    container.appendChild(div);
-  });
-}
-
-// ======================== MULTI-OPERATIONS ENGINE ========================
-const PIRATE_PROFILES = {
-  grumete:       { mult:0.5, rsiOB:80, rsiOS:20, name:'GRUMETE',       emoji:'🟢', minVotes:3 },
-  marinero:      { mult:0.8, rsiOB:75, rsiOS:25, name:'MARINERO',      emoji:'🔵', minVotes:3 },
-  contramaestre: { mult:1.0, rsiOB:70, rsiOS:30, name:'CONTRAMAESTRE', emoji:'🟡', minVotes:3 },
-  corsario:      { mult:1.3, rsiOB:65, rsiOS:35, name:'CORSARIO',      emoji:'🟠', minVotes:2 },
-  capitan:       { mult:1.8, rsiOB:60, rsiOS:40, name:'CAPITÁN PIRATA',emoji:'🔴', minVotes:2 },
-};
-let activePirateProfile = 'contramaestre';
-let activePirateMult    = 1.0;
-let freedomMode         = false;
-
-// ── ATR Calculation ─────────────────────────────────────────────
-function calcATR(period=14) {
-  if(prices.length < period+1) return prices.length > 1 ? Math.abs(prices[prices.length-1]-prices[prices.length-2])*period : 0.001;
-  let atrSum = 0;
-  for(let i=prices.length-period; i<prices.length; i++) {
-    const high = prices[i]*1.0005, low = prices[i]*0.9995; // approximate H/L from close
-    const tr = Math.max(high-low, Math.abs(high-prices[i-1]), Math.abs(low-prices[i-1]));
-    atrSum += tr;
-  }
-  return atrSum / period;
-}
-
-/** Get dynamic SL/TP from ATR × profile multiplier */
-function getATRLevels() {
-  const atr  = calcATR();
-  const inst = INSTRUMENTS[currentInst];
-  const atrPips = atr * inst.pipMul;
-  const mult = freedomMode ? aiFreeMult : activePirateMult;
-  const sl = Math.max(5,  Math.round(atrPips * 1.0 * mult));
-  const tp = Math.max(10, Math.round(atrPips * 2.2 * mult));
-  return { sl, tp, atr, atrPips };
-}
-
 /** Update ATR display in UI */
 function updateATRDisplay(levels) {
   const el = document.getElementById('atrDisplay');
   if(!el) return;
   const inst = INSTRUMENTS[currentInst];
-  el.innerHTML = `
-    <div class="atr-display">
-      <div>
-        <div class="atr-label">ATR DINÁMICO</div>
-        <div class="atr-desc">SL: <b style="color:var(--danger)">${levels.sl} pips</b> · TP: <b style="color:var(--accent)">${levels.tp} pips</b></div>
-      </div>
-      <div class="atr-val">${levels.atrPips.toFixed(1)}<span style="font-size:8px;color:var(--muted)"> pip</span></div>
-    </div>`;
+  el.innerHTML = '<div class="atr-display"><div>' +
+    '<div class="atr-label">ATR DINÁMICO</div>' +
+    '<div class="atr-desc">SL: <b style="color:var(--danger)">'+levels.sl+' pips</b> · TP: <b style="color:var(--accent)">'+levels.tp+' pips</b></div>' +
+    '</div><div class="atr-val">'+levels.atrPips.toFixed(1)+'<span style="font-size:8px;color:var(--muted)"> pip</span></div></div>';
 }
 
 // ── Stochastic RSI ───────────────────────────────────────────────
-function calcStochRSI(period=14, smoothK=3, smoothD=3) {
+function calcStochRSI(period, smoothK, smoothD) { if(!period)period=14; if(!smoothK)smoothK=3; if(!smoothD)smoothD=3;
   if(prices.length < period*2) return { k:50, d:50 };
   // Build RSI array
   const rsiArr = [];
@@ -4322,12 +3982,12 @@ function calcStochRSI(period=14, smoothK=3, smoothD=3) {
   }
   if(rsiArr.length < period) return { k:50, d:50 };
   const recentRSI = rsiArr.slice(-period);
-  const minRSI = Math.min(...recentRSI), maxRSI = Math.max(...recentRSI);
+  const minRSI = Math.min.apply(null, recentRSI), maxRSI = Math.max.apply(null, recentRSI);
   const rawK = maxRSI===minRSI ? 50 : ((rsiArr[rsiArr.length-1]-minRSI)/(maxRSI-minRSI))*100;
   // Smooth K
   const kArr = rsiArr.slice(-smoothK).map((_,i,a)=>{
     const slice=rsiArr.slice(Math.max(0,rsiArr.length-smoothK+i-smoothK+1),rsiArr.length-smoothK+i+1);
-    const mn=Math.min(...slice),mx=Math.max(...slice);
+    const mn=Math.min.apply(null, slice),mx=Math.max.apply(null, slice);
     return mx===mn?50:((slice[slice.length-1]-mn)/(mx-mn))*100;
   });
   const k = kArr.reduce((a,b)=>a+b,0)/kArr.length;
@@ -4388,6 +4048,7 @@ function setPirateProfile(key, el) {
 
 // ── FREEDOM MODE ─────────────────────────────────────────────────
 let aiFreeMult = 1.0; // IA decides this dynamically
+let freedomMode = false; // Libertad Absoluta — IA sin restricciones
 
 function toggleFreedom() {
   freedomMode = !freedomMode;
@@ -4427,7 +4088,7 @@ function updateFreedomAI(confidence, volatility, trend) {
              : aiFreeMult >= 0.8 ? '⚖️ EQUILIBRADO'
              : '🛡️ CONSERVADOR';
   const el = document.getElementById('freedomAIDecision');
-  if(el) el.textContent = `${desc} · ×${aiFreeMult.toFixed(2)} ATR`;
+  if(el) el.textContent = desc+' · ×'+aiFreeMult.toFixed(2)+' ATR';
 }
 
 function startBot(){
@@ -4440,7 +4101,7 @@ function startBot(){
   document.getElementById('btnStop').style.display='block';
   document.getElementById('statusDot').classList.remove('off');
   document.getElementById('statusText').textContent='EN VIVO';
-  addLog(`▶ Bot iniciado — ${currentInst}`,'warn');
+  addLog('▶ Bot iniciado — '+currentInst,'warn');
   interval=setInterval(tick,700);
 }
 function stopBot(){
@@ -4521,7 +4182,7 @@ function exportBotData() {
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url;
-  a.download = `forexbot_data_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = 'forexbot_data_'+new Date().toISOString().slice(0,10)+'.json';
   a.click();
   URL.revokeObjectURL(url);
   addLog('📤 Datos exportados al teléfono', 'opt');
@@ -4579,7 +4240,7 @@ function checkProtections() {
   const rachaPaused = protPaused && now < protPauseUntil;
   const elR = document.getElementById('protRachaBadge');
   const itemR = document.getElementById('protRacha');
-  if(elR) { elR.textContent = rachaPaused ? 'EN PAUSA' : `${consecLosses}/3`; elR.className = rachaPaused ? 'protection-badge warn' : 'protection-badge on'; }
+  if(elR) { elR.textContent = rachaPaused ? 'EN PAUSA' : (consecLosses+'/3'); elR.className = rachaPaused ? 'protection-badge warn' : 'protection-badge on'; }
   if(itemR) itemR.className = 'protection-item ' + (rachaPaused ? 'triggered' : 'active');
   if(rachaPaused && now >= protPauseUntil) { protPaused = false; consecLosses = 0; addLog('🔁 Pausa de racha terminada — reanudando', 'buy'); }
 
@@ -4679,7 +4340,7 @@ function genHistPro(n, base, vol, marketType) {
 
 /** Pro backtest with drawdown and streak tracking */
 function backtestPro(prices, cfg) {
-  const { rsiPeriod, rsiOB, rsiOS, macdFast, macdSlow, macdSig, atrMult=1.0, sym='EUR/USD' } = cfg;
+  var rsiPeriod=cfg.rsiPeriod, rsiOB=cfg.rsiOB, rsiOS=cfg.rsiOS, macdFast=cfg.macdFast, macdSlow=cfg.macdSlow, macdSig=cfg.macdSig, atrMult=cfg.atrMult||1.0, sym=cfg.sym||'EUR/USD';
   const inst = INSTRUMENTS[sym] || INSTRUMENTS['EUR/USD'];
   let eq = 10000, tr = 0, ws = 0, inT = false, dir = '', ent = 0;
   let maxEq = 10000, maxDrawdown = 0, maxStreak = 0, curStreak = 0;
@@ -4752,7 +4413,7 @@ async function runOptimizerPro() {
         combos.push({ rsiPeriod:rP, rsiOB:rOB, rsiOS:rOS, macdFast:mF, macdSlow:mS, macdSig:9, atrMult:aM, sym });
 
   const total = combos.length;
-  document.getElementById('progressLabel').textContent = `0 / ${total}`;
+  document.getElementById('progressLabel').textContent = '0 / '+total;
 
   // Generate price history for selected market type
   const hist = genHistPro(800, inst.base, inst.vol, optMarket);
@@ -4769,8 +4430,8 @@ async function runOptimizerPro() {
       processed++;
     }
     document.getElementById('progressFill').style.width = ((processed/total)*100)+'%';
-    document.getElementById('progressLabel').textContent = `${processed} / ${total}`;
-    document.getElementById('progressText').textContent  = `Probando ${processed} de ${total}...`;
+    document.getElementById('progressLabel').textContent = processed+' / '+total;
+    document.getElementById('progressText').textContent  = 'Probando '+processed+' de '+total+'...';
     await new Promise(r => setTimeout(r, 0));
   }
 
@@ -4778,7 +4439,7 @@ async function runOptimizerPro() {
   const top10 = results.slice(0, 10);
   bestParams  = top10[0];
 
-  document.getElementById('progressText').textContent = `✓ Completado — ${total} combinaciones evaluadas`;
+  document.getElementById('progressText').textContent = '✓ Completado — '+total+' combinaciones evaluadas';
 
   // Metrics
   document.getElementById('optStats').style.display = 'grid';
@@ -4825,7 +4486,7 @@ async function runOptimizerPro() {
 
   document.getElementById('btnApply').style.display = 'block';
   btn.disabled = false; btn.textContent = '🔄 Re-Optimizar';
-  addLog(`🧬 Optimizador Pro completado. Mejor WR: ${top10[0].winRate.toFixed(1)}% | DD: ${top10[0].maxDrawdown.toFixed(1)}%`, 'opt');
+  addLog('🧬 Optimizador Pro completado. Mejor WR: '+top10[0].winRate.toFixed(1)+'% | DD: '+top10[0].maxDrawdown.toFixed(1)+'%', 'opt');
 }
 
 function applyBestParams() {
@@ -4839,7 +4500,7 @@ function applyBestParams() {
   // Apply ATR multiplier
   activePirateMult = bestParams.atrMult;
   switchTab('bot');
-  addLog(`✦ Parámetros optimizados aplicados — ATR ×${bestParams.atrMult}`, 'opt');
+  addLog('✦ Parámetros optimizados aplicados — ATR ×'+bestParams.atrMult, 'opt');
 }
 // ======================== SECURITY — PIN SYSTEM ========================
 const PIN_KEY      = 'forexbot_pin_hash';
@@ -4887,7 +4548,7 @@ async function decryptData(encObj, pin) {
   } catch(e) { return null; }
 }
 
-function updatePinDots(prefix, len, error=false) {
+function updatePinDots(prefix, len, error) { if(error===undefined)error=false;
   for(let i=0; i<6; i++) {
     const dot = document.getElementById(prefix+i);
     if(!dot) continue;
@@ -4900,7 +4561,7 @@ function pinPress(num) {
   const lockedUntil = parseInt(localStorage.getItem(PIN_LOCKED) || '0');
   if(Date.now() < lockedUntil) {
     const mins = Math.ceil((lockedUntil - Date.now()) / 60000);
-    setPinMsg(`🔒 Bloqueado — espera ${mins} minuto(s)`, true);
+    setPinMsg('🔒 Bloqueado — espera '+mins+' minuto(s)', true);
     return;
   }
 
@@ -4926,7 +4587,7 @@ function pinDelete() {
   else updatePinDots('ud', pinBuffer.length);
 }
 
-function setPinMsg(msg, isError=false, isSuccess=false) {
+function setPinMsg(msg, isError, isSuccess) { if(isError===undefined)isError=false; if(isSuccess===undefined)isSuccess=false;
   const el = document.getElementById('pinMsg');
   if(!el) return;
   el.textContent = msg;
@@ -4985,9 +4646,9 @@ async function pinCheckUnlock() {
     if(pinAttempts >= MAX_ATTEMPTS) {
       const lockUntil = Date.now() + LOCK_MINUTES * 60 * 1000;
       localStorage.setItem(PIN_LOCKED, lockUntil);
-      setPinMsg(`🔒 Demasiados intentos — bloqueado ${LOCK_MINUTES} min`, true);
+      setPinMsg('🔒 Demasiados intentos — bloqueado '+LOCK_MINUTES+' min', true);
     } else {
-      setPinMsg(`PIN incorrecto — ${remaining} intento(s) restante(s)`, true);
+      setPinMsg('PIN incorrecto — '+remaining+' intento(s) restante(s)', true);
     }
 
     setTimeout(() => {
@@ -5038,7 +4699,7 @@ async function exportBotDataSecure() {
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url;
-  a.download = `forexbot_secure_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = 'forexbot_secure_'+new Date().toISOString().slice(0,10)+'.json';
   a.click();
   URL.revokeObjectURL(url);
   addLog('🔒 Datos exportados cifrados con tu PIN', 'opt');
@@ -5114,7 +4775,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pinUnlock').style.display = 'block';
     if(Date.now() < lockedUntil) {
       const mins = Math.ceil((lockedUntil - Date.now()) / 60000);
-      setPinMsg(`🔒 Bloqueado — espera ${mins} minuto(s)`, true);
+      setPinMsg('🔒 Bloqueado — espera '+mins+' minuto(s)', true);
     }
   }
 })();
