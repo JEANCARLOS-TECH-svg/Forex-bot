@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ForexBot v22 — Optimizado</title>
+<title>ForexBot v23 — Optimizado</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -1060,7 +1060,7 @@
       <div class="logo-icon">⚡</div>
       <div>
         <h1>Forex<span>Bot</span></h1>
-        <small>v22.0 — OPTIMIZADO</small>
+        <small>v23.0 — IA REAL</small>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -1455,6 +1455,25 @@
             <div class="freedom-active-label">DECISIÓN IA EN TIEMPO REAL</div>
             <div class="freedom-ai-decision" id="freedomAIDecision">Analizando mercado...</div>
           </div>
+        </div>
+
+        <!-- MODO ENTRENAMIENTO -->
+        <div style="margin-top:8px">
+          <button onclick="toggleTraining()" id="trainingBtn"
+            style="width:100%;padding:10px 14px;border-radius:12px;cursor:pointer;
+            display:flex;align-items:center;justify-content:space-between;
+            border:1px solid rgba(168,85,247,0.3);background:rgba(168,85,247,0.06);
+            font-family:'Space Mono',monospace;transition:all .3s"
+            id="trainingBtn">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:16px">🧠</span>
+              <div style="text-align:left">
+                <div style="font-size:11px;font-weight:700;color:var(--purple)">MODO ENTRENAMIENTO</div>
+                <div style="font-size:9px;color:var(--muted)">Opera al máximo · Aprende rápido</div>
+              </div>
+            </div>
+            <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted)" id="trainingState">INACTIVO</div>
+          </button>
         </div>
 
         <!-- PERFIL DE RIESGO — SLIDER SIMPLIFICADO -->
@@ -2080,16 +2099,51 @@ function updateWsBadge() {
 }
 
 /** Start live prices — Spot only */
+/** Pre-cargar 100 velas históricas de Binance Real — canvas instantáneas */
+function preloadHistoricalCandles(symbol, callback) {
+  var binanceSym = symbol || 'BTCUSDT';
+  var url = 'https://api.binance.com/api/v3/klines?symbol=' + binanceSym + '&interval=1m&limit=100';
+  addLog('📊 Cargando historial de ' + binanceSym + '...', 'warn');
+  fetch(url)
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if(!data || !data.length) { if(callback) callback(); return; }
+      // Each kline: [openTime, open, high, low, close, volume, ...]
+      var historical = data.map(function(k) { return parseFloat(k[4]); }); // close prices
+      prices = historical;
+      addLog('✅ ' + historical.length + ' velas históricas cargadas — gráficas listas', 'buy');
+      if(callback) callback();
+    })
+    .catch(function(err) {
+      addLog('⚠ No se pudo cargar historial — usando datos en vivo', 'warn');
+      if(callback) callback();
+    });
+}
+
 function startLivePrices() {
+  // Get Binance symbol for current instrument
+  var inst = INSTRUMENTS[currentInst];
+  var binanceSym = BINANCE_SYMBOLS[currentInst] || 'BTCUSDT';
+
+  // Pre-load historical candles first, then start WebSocket
+  preloadHistoricalCandles(binanceSym, function() {
+    // Draw charts immediately with historical data
+    if(running) {
+      setTimeout(function() {
+        resizeAllCanvases();
+        drawPrice();
+        if(indRSI) drawRSI(+document.getElementById('rsiOB').value, +document.getElementById('rsiOS').value);
+        if(indMACD) drawMACD();
+      }, 100);
+    }
+  });
+
   connectSpotWS();
-  // Futures disabled — too unstable on Testnet
   if(liveInterval) clearInterval(liveInterval);
-  liveInterval = setInterval(() => {
+  liveInterval = setInterval(function() {
     if(!apiConnected || !running) return;
     const livePrice = getLivePrice(currentInst);
     if(livePrice && livePrice > 0) {
-      // Only inject if not already handled by tick() — tick reads it directly
-      // but we also update the display even when bot is stopped
       const inst = INSTRUMENTS[currentInst];
       document.getElementById('instPriceDisplay').textContent = livePrice.toFixed(inst.decimals);
       const refBase = inst.base;
@@ -2570,6 +2624,7 @@ let aiWeights = { rsi: 25, macd: 25, bb: 25, ema: 25 };
 let aiPredictions = { rsi: [], macd: [], bb: [], ema: [] };
 let aiThreshold = 60;
 let lastIndSignals = { rsi: 0, macd: 0, bb: 0, ema: 0 };
+let lastDivSignal  = ''; // tracks last RSI divergence to avoid spam logs
 
 // Trend filter state
 let trendDirection = 0; // 1=up, -1=down, 0=flat
@@ -2730,6 +2785,31 @@ function calcVolatility() {
   const variance = recent.reduce((s,p)=>s+Math.pow(p-avg,2),0)/recent.length;
   return Math.min(1, Math.sqrt(variance)/avg * 1000);
 }
+
+/** Calculate Average True Range */
+function calcATR(period) {
+  if(!period) period = 14;
+  if(prices.length < period + 1) return prices.length > 1 ? Math.abs(prices[prices.length-1] - prices[prices.length-2]) : 1;
+  var trSum = 0;
+  var start = prices.length - period;
+  for(var i = start; i < prices.length; i++) {
+    trSum += Math.abs(prices[i] - prices[i-1]);
+  }
+  return trSum / period;
+}
+
+/** Get SL/TP levels based on ATR — ratio 1:2 */
+function getATRLevels() {
+  const inst = INSTRUMENTS[currentInst];
+  const atr = calcATR(14);
+  const atrPips = atr * inst.pipMul;
+  const mult = freedomMode ? aiFreeMult : activePirateMult;
+  // SL = 1x ATR, TP = 2x ATR (ratio 1:2 — professional standard)
+  const sl = Math.max(5,  Math.round(atrPips * 1.0 * mult));
+  const tp = Math.max(10, Math.round(atrPips * 2.0 * mult));
+  return { sl: sl, tp: tp, atrPips: atrPips };
+}
+
 
 function updateAIDisplay() {
   ['RSI','MACD','BB','EMA'].forEach((key,i) => {
@@ -3284,23 +3364,54 @@ function getSignal(rsi, macd, cfg) {
   const emaFast  = calcEMA(prices, 9);
   const emaSlow  = calcEMA(prices, 21);
   const emaSig   = getEMASignal(emaFast, emaSlow);
-  // Stochastic RSI signal — fine entry timing
   const stochSig = stoch.k < 20 ? 1 : stoch.k > 80 ? -1 : 0;
+
+  // ── LAYER 2B: RSI DIVERGENCE — señal de reversión ────────────
+  // Bullish divergence: precio hace mínimo más bajo, RSI hace mínimo más alto → BUY
+  // Bearish divergence: precio hace máximo más alto, RSI hace máximo más bajo → SELL
+  var divSig = 0;
+  if(prices.length >= 20 && rsiHistory.length >= 20) {
+    var recentPrices = prices.slice(-20);
+    var recentRSI    = rsiHistory.slice(-20);
+    var priceMin1 = Math.min.apply(null, recentPrices.slice(0, 10));
+    var priceMin2 = Math.min.apply(null, recentPrices.slice(10));
+    var rsiMin1   = Math.min.apply(null, recentRSI.slice(0, 10));
+    var rsiMin2   = Math.min.apply(null, recentRSI.slice(10));
+    var priceMax1 = Math.max.apply(null, recentPrices.slice(0, 10));
+    var priceMax2 = Math.max.apply(null, recentPrices.slice(10));
+    var rsiMax1   = Math.max.apply(null, recentRSI.slice(0, 10));
+    var rsiMax2   = Math.max.apply(null, recentRSI.slice(10));
+    // Bullish: precio baja pero RSI sube
+    if(priceMin2 < priceMin1 * 0.9995 && rsiMin2 > rsiMin1 * 1.02) {
+      divSig = 1;
+      if(lastDivSignal !== 'BUY') { addLog('📐 Divergencia RSI alcista detectada — señal BUY', 'buy'); lastDivSignal = 'BUY'; }
+    }
+    // Bearish: precio sube pero RSI baja
+    else if(priceMax2 > priceMax1 * 1.0005 && rsiMax2 < rsiMax1 * 0.98) {
+      divSig = -1;
+      if(lastDivSignal !== 'SELL') { addLog('📐 Divergencia RSI bajista detectada — señal SELL', 'sell'); lastDivSignal = 'SELL'; }
+    } else {
+      lastDivSignal = '';
+    }
+  }
 
   lastIndSignals.rsi  = rsiSig;
   lastIndSignals.macd = macdSig;
   lastIndSignals.bb   = bbSig;
   lastIndSignals.ema  = emaSig;
 
-  // ── LAYER 3: Weighted AI scores ──────────────────────────────
+  // ── LAYER 3: Weighted AI scores (divergencia suma bonus) ──────
+  const divBonus = 15; // divergence adds extra weight
   const buyScore  = (rsiSig===1   ? aiWeights.rsi  : 0) +
                     (macdSig===1  ? aiWeights.macd : 0) +
                     (bbSig===1    ? aiWeights.bb   : 0) +
-                    (emaSig===1   ? aiWeights.ema  : 0);
+                    (emaSig===1   ? aiWeights.ema  : 0) +
+                    (divSig===1   ? divBonus        : 0);
   const sellScore = (rsiSig===-1  ? aiWeights.rsi  : 0) +
                     (macdSig===-1 ? aiWeights.macd : 0) +
                     (bbSig===-1   ? aiWeights.bb   : 0) +
-                    (emaSig===-1  ? aiWeights.ema  : 0);
+                    (emaSig===-1  ? aiWeights.ema  : 0) +
+                    (divSig===-1  ? divBonus        : 0);
 
   const maxScore = Math.max(buyScore, sellScore);
   updateConfidenceBar(buyVotes, sellVotes, buyScore, sellScore, trendDirection);
@@ -3319,39 +3430,79 @@ function getSignal(rsi, macd, cfg) {
     else if(last < prev3 * 0.9998) priceMomentum = -1;
   }
 
-  // ── MINIMUM MARGIN FILTER — avoid near-equal scores ──────────
+  // ── MINIMUM MARGIN FILTER ────────────────────────────────────
   const scoreDiff = Math.abs(buyScore - sellScore);
 
-  // ── FREEDOM MODE — IA decides everything ─────────────────────
-  if(freedomMode) {
+  // ══════════════════════════════════════════════════════════════
+  // ARQUITECTURA: INDICADORES COMO SUGERENCIA — IA COMO DECISOR
+  // ══════════════════════════════════════════════════════════════
+
+  // Factor A: Opinión de indicadores (qué dicen RSI, MACD, BB, EMA, Div)
+  const indBuyStrength  = buyScore  / (Object.values(aiWeights).reduce(function(a,b){return a+b;},0) + 15 || 100);
+  const indSellStrength = sellScore / (Object.values(aiWeights).reduce(function(a,b){return a+b;},0) + 15 || 100);
+  const indDirection    = buyScore > sellScore ? 1 : sellScore > buyScore ? -1 : 0;
+
+  // Factor B: Contexto del mercado (tendencia + volatilidad + momentum)
+  var contextScore = 0;
+  if(trendDirection === indDirection)  contextScore += 35; // tendencia confirma
+  else if(trendDirection === 0)        contextScore += 15; // mercado lateral — duda
+  else                                 contextScore += 0;  // tendencia contradice
+  if(priceMomentum === indDirection)   contextScore += 35; // momentum confirma
+  else if(priceMomentum === 0)         contextScore += 15; // momentum neutro
+  else                                 contextScore += 0;  // momentum contradice
+  if(vol < 0.5)                        contextScore += 15; // volatilidad baja = más predecible
+  else if(vol < 0.8)                   contextScore += 8;
+  else                                 contextScore += 0;  // alta volatilidad = riesgo
+  if(divSig === indDirection && divSig !== 0) contextScore += 15; // divergencia confirma
+  // contextScore: 0-100
+
+  // Factor C: Red Neuronal (solo cuenta cuando tiene experiencia)
+  var nnScore = 50; // neutral por defecto
+  if(nnSamples >= 10) {
+    if(nnLastDecision === 'BUY'  && indDirection === 1)  nnScore = 85;
+    else if(nnLastDecision === 'SELL' && indDirection === -1) nnScore = 85;
+    else if(nnLastDecision === 'NEUTRAL')                nnScore = 40;
+    else                                                 nnScore = 20; // NN contradice
+  }
+
+  // ── TRAINING MODE — indicadores 60%, contexto 40%, NN observa ─
+  if(trainingMode) {
     updateFreedomAI(maxScore, vol, trendDirection);
-    if(maxScore < 25) return 'NEUTRAL';
-    const freeThreshold = 28 + (1 - lastAIConfidence/100)*10 - momentumBonus*0.2;
-    // Momentum confirms direction
-    const buyMomentumOk  = priceMomentum >= 0;
-    const sellMomentumOk = priceMomentum <= 0;
-    if(buyScore  >= freeThreshold && buyVotesArr  >= 1 && scoreDiff >= 3 && buyMomentumOk  && (tradeMode==='buy'  || tradeMode==='both')) return 'BUY';
-    if(sellScore >= freeThreshold && sellVotesArr >= 1 && scoreDiff >= 3 && sellMomentumOk && (tradeMode==='sell' || tradeMode==='both')) return 'SELL';
+    // Peso: indicadores 60% + contexto 40%
+    const trainDecision = (indBuyStrength * 60) + (contextScore * 0.4);
+    const trainSell     = (indSellStrength * 60) + (contextScore * 0.4);
+    // Opera con umbral bajo — prioridad es aprender
+    if(trainDecision > trainSell && indBuyStrength > 0.08 && (tradeMode==='buy' || tradeMode==='both')) return 'BUY';
+    if(trainSell > trainDecision && indSellStrength > 0.08 && (tradeMode==='sell' || tradeMode==='both')) return 'SELL';
     return 'NEUTRAL';
   }
 
-  // ── NORMAL MODE — profile hierarchy ──────────────────────────
-  if(trendDirection === 0 && maxScore < 30) return 'NEUTRAL';
+  // ── FREEDOM MODE — indicadores 40%, contexto 35%, NN 25% ──────
+  if(freedomMode) {
+    updateFreedomAI(lastAIConfidence, vol, trendDirection);
+    // Decisión compuesta — la IA pondera los 3 factores
+    var freeDecisionBuy  = (indBuyStrength  * 40) + (contextScore * 0.35) + (nnScore * 0.25 * (indDirection===1  ? 1 : 0.3));
+    var freeDecisionSell = (indSellStrength * 40) + (contextScore * 0.35) + (nnScore * 0.25 * (indDirection===-1 ? 1 : 0.3));
+    // Umbral dinámico — sube si racha mala, baja si racha buena
+    var freeThresh = 18 - momentumBonus * 0.3;
+    freeThresh = Math.max(10, Math.min(30, freeThresh));
+    if(freeDecisionBuy  >= freeThresh && scoreDiff >= 3 && (tradeMode==='buy'  || tradeMode==='both')) return 'BUY';
+    if(freeDecisionSell >= freeThresh && scoreDiff >= 3 && (tradeMode==='sell' || tradeMode==='both')) return 'SELL';
+    return 'NEUTRAL';
+  }
 
-  const profile  = PIRATE_PROFILES[activePirateProfile];
-  const minVotes = profile ? Math.max(1, profile.minVotes - 1) : 2;
+  // ── NORMAL MODE — indicadores 40%, contexto 35%, NN 25% ───────
+  // La IA tiene criterio propio — indicadores son solo una voz
+  var normDecisionBuy  = (indBuyStrength  * 40) + (contextScore * 0.35) + (nnScore * 0.25 * (indDirection===1  ? 1 : 0.2));
+  var normDecisionSell = (indSellStrength * 40) + (contextScore * 0.35) + (nnScore * 0.25 * (indDirection===-1 ? 1 : 0.2));
 
-  aiThreshold = trendDirection !== 0
-    ? (vol > 0.7 ? 55 : 45) * (1/activePirateMult)
-    : 60;
-  aiThreshold = Math.max(30, Math.min(70, aiThreshold));
+  // Umbral más exigente en modo normal — calidad sobre cantidad
+  var normThresh = 22 - momentumBonus * 0.2;
+  normThresh = normThresh * (1 / activePirateMult); // perfil de riesgo ajusta
+  normThresh = Math.max(14, Math.min(35, normThresh));
 
-  // Minimum score margin of 5 points to avoid weak signals
-  const canBuy  = buyScore  >= sellScore  && scoreDiff >= 5 && priceMomentum >= 0;
-  const canSell = sellScore >= buyScore   && scoreDiff >= 5 && priceMomentum <= 0;
-
-  if(buyScore  >= aiThreshold && buyVotesArr  >= minVotes && canBuy  && (tradeMode==='buy'  || tradeMode==='both')) return 'BUY';
-  if(sellScore >= aiThreshold && sellVotesArr >= minVotes && canSell && (tradeMode==='sell' || tradeMode==='both')) return 'SELL';
+  if(normDecisionBuy  >= normThresh && buyVotesArr  >= 1 && scoreDiff >= 5 && (tradeMode==='buy'  || tradeMode==='both')) return 'BUY';
+  if(normDecisionSell >= normThresh && sellVotesArr >= 1 && scoreDiff >= 5 && (tradeMode==='sell' || tradeMode==='both')) return 'SELL';
   return 'NEUTRAL';
 }
 
@@ -3596,14 +3747,9 @@ function tick(){
       tradeMarkers.push({ priceIndex: prices.length - 1, price: np, type: signal });
       if(tradeMarkers.length > 20) tradeMarkers.shift();
       const levels = getATRLevels();
+      // Open operation — SL/TP stored in pips, closed by updateOpsProgress
       const op = openOperation(signal, ps, levels.sl, levels.tp, selectedCurrency.code);
       trades++;
-      if(op) {
-        const won = Math.random() > 0.42;
-        setTimeout(() => {
-          if(activeOps.find(o => o.id === op.id)) closeOperation(op.id, won);
-        }, 3000 + Math.random()*5000);
-      }
     }
   } else {
     updateOpsProgress(np);
@@ -3728,7 +3874,8 @@ let activeOps = []; // Array of active operations
 let opIdCounter = 0;
 
 function canOpenNewOp(signal) {
-  if(activeOps.length >= MAX_OPS) return false;
+  const maxOps = trainingMode ? 5 : MAX_OPS;
+  if(activeOps.length >= maxOps) return false;
   if(ksTriggered) return false;
   // Don't open same direction if already 2 of that type
   const sameDir = activeOps.filter(o => o.type === signal).length;
@@ -4050,6 +4197,27 @@ function setPirateProfile(key, el) {
 // ── FREEDOM MODE ─────────────────────────────────────────────────
 let aiFreeMult = 1.0; // IA decides this dynamically
 let freedomMode = false; // Libertad Absoluta — IA sin restricciones
+let trainingMode = false; // Modo Entrenamiento — opera al máximo
+
+function toggleTraining() {
+  trainingMode = !trainingMode;
+  const btn   = document.getElementById('trainingBtn');
+  const state = document.getElementById('trainingState');
+  if(trainingMode) {
+    btn.style.borderColor   = 'rgba(168,85,247,0.6)';
+    btn.style.background    = 'rgba(168,85,247,0.12)';
+    state.textContent       = 'ACTIVO';
+    state.style.color       = 'var(--purple)';
+    addLog('🧠 Modo Entrenamiento ACTIVO — operando al máximo', 'opt');
+  } else {
+    btn.style.borderColor   = 'rgba(168,85,247,0.3)';
+    btn.style.background    = 'rgba(168,85,247,0.06)';
+    state.textContent       = 'INACTIVO';
+    state.style.color       = 'var(--muted)';
+    addLog('🧠 Modo Entrenamiento desactivado', 'warn');
+  }
+}
+
 
 function toggleFreedom() {
   freedomMode = !freedomMode;
@@ -4240,6 +4408,9 @@ let protPaused    = false;
 let protPauseUntil = 0;
 
 function checkProtections() {
+  // Modo Entrenamiento — sin bloqueos, opera siempre
+  if(trainingMode) return false;
+
   const now = Date.now();
 
   // 1. Horario — no operar de 22:00 a 04:00 (baja liquidez)
