@@ -963,6 +963,31 @@
   }
   .security-badge.locked { color:var(--danger); background:rgba(255,77,106,0.06); border-color:rgba(255,77,106,0.2); }
 
+  /* AUTO MODE BADGE */
+  .auto-badge {
+    display:flex; align-items:center; gap:5px;
+    font-size:9px; font-family:'Space Mono',monospace;
+    padding:3px 9px; border-radius:20px;
+    border:1px solid rgba(71,85,105,0.3);
+    background:rgba(71,85,105,0.08);
+    color:var(--muted); transition:all .4s;
+  }
+  .auto-badge.searching {
+    color:#7dd3fc;
+    background:rgba(125,211,252,0.08);
+    border-color:rgba(125,211,252,0.3);
+    animation:pulse-blue 1.5s infinite;
+  }
+  .auto-badge.connected {
+    color:#475569;
+    background:rgba(71,85,105,0.15);
+    border-color:rgba(71,85,105,0.3);
+  }
+  @keyframes pulse-blue {
+    0%,100% { box-shadow:0 0 0 0 rgba(125,211,252,0.3); }
+    50%      { box-shadow:0 0 0 4px rgba(125,211,252,0); }
+  }
+
   /* API key masked display */
   .api-key-masked {
     font-family:'Space Mono',monospace; font-size:11px;
@@ -1039,6 +1064,7 @@
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
+      <div class="auto-badge" id="autoBadge">🌐 AUTO</div>
       <div class="security-badge" id="securityBadge">🔒 SEGURO</div>
       <div class="status-pill">
         <div class="dot off" id="statusDot"></div>
@@ -1254,145 +1280,23 @@
                     </button>
                     <div class="curr-dropdown-menu" id="currDropMenu">
 
-                      <!-- CRIPTO -->
-                      <div class="curr-group-label">₿ CRIPTOMONEDAS</div>
-                      <div class="curr-option" onclick="selectCurrency('BTC','₿','Bitcoin','crypto',this)">
-                        <span class="curr-option-icon">₿</span>
-                        <div class="curr-option-info"><div class="curr-option-code">BTC</div><div class="curr-option-name">Bitcoin</div></div>
-                        <span class="curr-option-rate" id="rate-BTC">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('ETH','Ξ','Ethereum','crypto',this)">
-                        <span class="curr-option-icon">Ξ</span>
-                        <div class="curr-option-info"><div class="curr-option-code">ETH</div><div class="curr-option-name">Ethereum</div></div>
-                        <span class="curr-option-rate" id="rate-ETH">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('BNB','🔶','Binance Coin','crypto',this)">
-                        <span class="curr-option-icon">🔶</span>
-                        <div class="curr-option-info"><div class="curr-option-code">BNB</div><div class="curr-option-name">Binance Coin</div></div>
-                        <span class="curr-option-rate" id="rate-BNB">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('SOL','◎','Solana','crypto',this)">
-                        <span class="curr-option-icon">◎</span>
-                        <div class="curr-option-info"><div class="curr-option-code">SOL</div><div class="curr-option-name">Solana</div></div>
-                        <span class="curr-option-rate" id="rate-SOL">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('USDT','💵','Tether USD','stable',this)">
-                        <span class="curr-option-icon">💵</span>
-                        <div class="curr-option-info"><div class="curr-option-code">USDT</div><div class="curr-option-name">Tether</div></div>
-                        <span class="curr-option-rate" id="rate-USDT">≈ $1.00</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('XRP','💧','Ripple','crypto',this)">
-                        <span class="curr-option-icon">💧</span>
-                        <div class="curr-option-info"><div class="curr-option-code">XRP</div><div class="curr-option-name">Ripple</div></div>
-                        <span class="curr-option-rate" id="rate-XRP">—</span>
-                      </div>
-
-                      <div class="curr-divider"></div>
-                      <!-- FIAT AMERICAS -->
-                      <div class="curr-group-label">🌎 AMÉRICAS</div>
                       <div class="curr-option selected" onclick="selectCurrency('USD','🇺🇸','Dólar Americano','fiat',this)">
                         <span class="curr-option-icon">🇺🇸</span>
                         <div class="curr-option-info"><div class="curr-option-code">USD</div><div class="curr-option-name">Dólar Americano</div></div>
                         <span class="curr-option-rate">Base</span>
                         <span class="curr-option-check">✓</span>
                       </div>
+
                       <div class="curr-option" onclick="selectCurrency('COP','🇨🇴','Peso Colombiano','fiat',this)">
                         <span class="curr-option-icon">🇨🇴</span>
                         <div class="curr-option-info"><div class="curr-option-code">COP</div><div class="curr-option-name">Peso Colombiano</div></div>
                         <span class="curr-option-rate" id="rate-COP">—</span>
                       </div>
-                      <div class="curr-option" onclick="selectCurrency('CAD','🇨🇦','Dólar Canadiense','fiat',this)">
-                        <span class="curr-option-icon">🇨🇦</span>
-                        <div class="curr-option-info"><div class="curr-option-code">CAD</div><div class="curr-option-name">Dólar Canadiense</div></div>
-                        <span class="curr-option-rate" id="rate-CAD">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('MXN','🇲🇽','Peso Mexicano','fiat',this)">
-                        <span class="curr-option-icon">🇲🇽</span>
-                        <div class="curr-option-info"><div class="curr-option-code">MXN</div><div class="curr-option-name">Peso Mexicano</div></div>
-                        <span class="curr-option-rate" id="rate-MXN">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('BRL','🇧🇷','Real Brasileño','fiat',this)">
-                        <span class="curr-option-icon">🇧🇷</span>
-                        <div class="curr-option-info"><div class="curr-option-code">BRL</div><div class="curr-option-name">Real Brasileño</div></div>
-                        <span class="curr-option-rate" id="rate-BRL">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('ARS','🇦🇷','Peso Argentino','fiat',this)">
-                        <span class="curr-option-icon">🇦🇷</span>
-                        <div class="curr-option-info"><div class="curr-option-code">ARS</div><div class="curr-option-name">Peso Argentino</div></div>
-                        <span class="curr-option-rate" id="rate-ARS">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('CLP','🇨🇱','Peso Chileno','fiat',this)">
-                        <span class="curr-option-icon">🇨🇱</span>
-                        <div class="curr-option-info"><div class="curr-option-code">CLP</div><div class="curr-option-name">Peso Chileno</div></div>
-                        <span class="curr-option-rate" id="rate-CLP">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('PEN','🇵🇪','Sol Peruano','fiat',this)">
-                        <span class="curr-option-icon">🇵🇪</span>
-                        <div class="curr-option-info"><div class="curr-option-code">PEN</div><div class="curr-option-name">Sol Peruano</div></div>
-                        <span class="curr-option-rate" id="rate-PEN">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('AUD','🇦🇺','Dólar Australiano','fiat',this)">
-                        <span class="curr-option-icon">🇦🇺</span>
-                        <div class="curr-option-info"><div class="curr-option-code">AUD</div><div class="curr-option-name">Dólar Australiano</div></div>
-                        <span class="curr-option-rate" id="rate-AUD">—</span>
-                      </div>
 
-                      <div class="curr-divider"></div>
-                      <!-- FIAT EUROPA -->
-                      <div class="curr-group-label">🌍 EUROPA</div>
-                      <div class="curr-option" onclick="selectCurrency('EUR','🇪🇺','Euro','fiat',this)">
-                        <span class="curr-option-icon">🇪🇺</span>
-                        <div class="curr-option-info"><div class="curr-option-code">EUR</div><div class="curr-option-name">Euro</div></div>
-                        <span class="curr-option-rate" id="rate-EUR">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('GBP','🇬🇧','Libra Esterlina','fiat',this)">
-                        <span class="curr-option-icon">🇬🇧</span>
-                        <div class="curr-option-info"><div class="curr-option-code">GBP</div><div class="curr-option-name">Libra Esterlina</div></div>
-                        <span class="curr-option-rate" id="rate-GBP">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('CHF','🇨🇭','Franco Suizo','fiat',this)">
-                        <span class="curr-option-icon">🇨🇭</span>
-                        <div class="curr-option-info"><div class="curr-option-code">CHF</div><div class="curr-option-name">Franco Suizo</div></div>
-                        <span class="curr-option-rate" id="rate-CHF">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('NOK','🇳🇴','Corona Noruega','fiat',this)">
-                        <span class="curr-option-icon">🇳🇴</span>
-                        <div class="curr-option-info"><div class="curr-option-code">NOK</div><div class="curr-option-name">Corona Noruega</div></div>
-                        <span class="curr-option-rate" id="rate-NOK">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('SEK','🇸🇪','Corona Sueca','fiat',this)">
-                        <span class="curr-option-icon">🇸🇪</span>
-                        <div class="curr-option-info"><div class="curr-option-code">SEK</div><div class="curr-option-name">Corona Sueca</div></div>
-                        <span class="curr-option-rate" id="rate-SEK">—</span>
-                      </div>
-
-                      <div class="curr-divider"></div>
-                      <!-- FIAT ASIA -->
-                      <div class="curr-group-label">🌏 ASIA</div>
-                      <div class="curr-option" onclick="selectCurrency('JPY','🇯🇵','Yen Japonés','fiat',this)">
-                        <span class="curr-option-icon">🇯🇵</span>
-                        <div class="curr-option-info"><div class="curr-option-code">JPY</div><div class="curr-option-name">Yen Japonés</div></div>
-                        <span class="curr-option-rate" id="rate-JPY">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('CNY','🇨🇳','Yuan Chino','fiat',this)">
-                        <span class="curr-option-icon">🇨🇳</span>
-                        <div class="curr-option-info"><div class="curr-option-code">CNY</div><div class="curr-option-name">Yuan Chino</div></div>
-                        <span class="curr-option-rate" id="rate-CNY">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('KRW','🇰🇷','Won Coreano','fiat',this)">
-                        <span class="curr-option-icon">🇰🇷</span>
-                        <div class="curr-option-info"><div class="curr-option-code">KRW</div><div class="curr-option-name">Won Coreano</div></div>
-                        <span class="curr-option-rate" id="rate-KRW">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('INR','🇮🇳','Rupia India','fiat',this)">
-                        <span class="curr-option-icon">🇮🇳</span>
-                        <div class="curr-option-info"><div class="curr-option-code">INR</div><div class="curr-option-name">Rupia India</div></div>
-                        <span class="curr-option-rate" id="rate-INR">—</span>
-                      </div>
-                      <div class="curr-option" onclick="selectCurrency('NZD','🇳🇿','Dólar NZ','fiat',this)">
-                        <span class="curr-option-icon">🇳🇿</span>
-                        <div class="curr-option-info"><div class="curr-option-code">NZD</div><div class="curr-option-name">Dólar Neozelandés</div></div>
-                        <span class="curr-option-rate" id="rate-NZD">—</span>
+                      <div class="curr-option" onclick="selectCurrency('BTC','₿','Bitcoin','crypto',this)">
+                        <span class="curr-option-icon">₿</span>
+                        <div class="curr-option-info"><div class="curr-option-code">BTC</div><div class="curr-option-name">Bitcoin</div></div>
+                        <span class="curr-option-rate" id="rate-BTC">—</span>
                       </div>
 
                     </div>
@@ -2147,6 +2051,7 @@ function connectSpotWS() {
   wsSpot.onopen = () => {
     wsRetry.spot = 0;
     wsLog('📡 Binance REAL conectado — precios en vivo', 'buy');
+    updateAutoBadge('connected');
     updateWsBadge();
   };
   wsSpot.onmessage = (e) => {
@@ -2162,6 +2067,7 @@ function connectSpotWS() {
   wsSpot.onerror = () => wsLog('⚠ WS Spot error', 'warn');
   wsSpot.onclose = (ev) => {
     updateWsBadge();
+    updateAutoBadge('searching');
     if(!apiConnected) return;
     // Reconexión infinita — Testnet puede caerse temporalmente
     wsRetry.spot++;
@@ -2233,6 +2139,23 @@ function toggleVis(id) {
   inp.type = inp.type === 'password' ? 'text' : 'password';
 }
 
+/** Update AUTO badge in header */
+function updateAutoBadge(state) {
+  // state: 'searching' = azul buscando | 'connected' = gris conectado | 'off' = apagado
+  const badge = document.getElementById('autoBadge');
+  if(!badge) return;
+  if(state === 'searching') {
+    badge.className = 'auto-badge searching';
+    badge.textContent = '🌐 BUSCANDO...';
+  } else if(state === 'connected') {
+    badge.className = 'auto-badge connected';
+    badge.textContent = '🌐 AUTO';
+  } else {
+    badge.className = 'auto-badge';
+    badge.textContent = '🌐 AUTO';
+  }
+}
+
 /** Conectar a precios públicos de Binance Real — sin API Key */
 function connectPublicPrices() {
   apiConnected = true;
@@ -2258,6 +2181,7 @@ function connectPublicPrices() {
   if(mkEl) mkEl.textContent = 'Precios públicos — sin API Key';
 
   addLog('🌐 Conectado a Binance REAL — precios públicos en vivo', 'buy');
+  updateAutoBadge('searching');
   startLivePrices();
 }
 
@@ -2514,21 +2438,15 @@ let dropdownOpen = false;
 
 // Approximate USD rates (simulated, updated periodically)
 const BASE_RATES = {
-  'USD':1, 'USDT':1,
-  'COP':4050, 'MXN':17.2, 'BRL':5.0, 'ARS':870, 'CLP':950, 'PEN':3.75,
-  'EUR':0.92, 'GBP':0.79, 'CHF':0.90, 'NOK':10.6, 'SEK':10.4,
-  'JPY':149.5, 'CNY':7.24, 'KRW':1330, 'INR':83.1,
-  'CAD':1.36, 'AUD':1.53, 'NZD':1.63,
-  'BTC':0.0000148, 'ETH':0.000292, 'BNB':0.0172,
-  'SOL':0.00562, 'XRP':1.626,
+  'USD': 1,
+  'COP': 4050,
+  'BTC': 0.0000148,
 };
 
 const CURR_SYMS = {
-  'USD':'$','USDT':'$','COP':'COL$','MXN':'$','BRL':'R$','ARS':'$','CLP':'$','PEN':'S/',
-  'EUR':'€','GBP':'£','CHF':'Fr','NOK':'kr','SEK':'kr',
-  'JPY':'¥','CNY':'¥','KRW':'₩','INR':'₹',
-  'CAD':'C$','AUD':'A$','NZD':'NZ$',
-  'BTC':'₿','ETH':'Ξ','BNB':'BNB','SOL':'◎','XRP':'XRP',
+  'USD': '$',
+  'COP': 'COL$',
+  'BTC': '₿',
 };
 
 function getRate(code) { return BASE_RATES[code] || 1; }
@@ -2716,17 +2634,99 @@ function updateTrendBadge(trend) {
 }
 
 /** Update AI confidence bar */
-function updateConfidenceBar(score, maxScore) {
-  const pct = maxScore > 0 ? Math.round((score/maxScore)*100) : 0;
-  lastAIConfidence = pct;
+// ======================== COMPOSITE CONFIDENCE SYSTEM ========================
+// Tracks recent operations for momentum memory
+let recentResults    = []; // last 10 results: true=win, false=loss
+let consecutiveWins  = 0;
+let consecutiveLoss  = 0;
+let momentumBonus    = 0;  // dynamic bonus from recent streak
+
+function registerOpResult(won) {
+  recentResults.push(won);
+  if(recentResults.length > 10) recentResults.shift();
+  if(won) { consecutiveWins++; consecutiveLoss = 0; }
+  else    { consecutiveLoss++; consecutiveWins = 0; }
+  // Momentum bonus/penalty
+  if(consecutiveWins >= 3)  momentumBonus =  10; // on a roll
+  else if(consecutiveLoss >= 3) momentumBonus = -15; // cooling down
+  else momentumBonus = 0;
+}
+
+/**
+ * Composite AI confidence — 4 factors:
+ * 1. Votes coincidence   (40%) — how many indicators agree
+ * 2. Signal strength     (25%) — how strong each signal is
+ * 3. Trend alignment     (20%) — trend confirms signal
+ * 4. Neural Network      (15%) — NN agrees with direction
+ */
+function calcCompositeConfidence(buyVotes, sellVotes, buyScore, sellScore, trendDir, nnDecision) {
+  const totalVotes = buyVotes + sellVotes || 1;
+  const dominantVotes = Math.max(buyVotes, sellVotes);
+  const isBuy = buyScore >= sellScore;
+
+  // Factor 1 — Vote coincidence (0-40)
+  const voteRatio = dominantVotes / 5; // max 5 indicators
+  const f1 = Math.round(voteRatio * 40);
+
+  // Factor 2 — Signal strength (0-25)
+  const maxScore = Math.max(buyScore, sellScore);
+  const totalWeight = Object.values(aiWeights).reduce(function(a,b){return a+b;}, 0);
+  const f2 = Math.round((maxScore / (totalWeight||100)) * 25);
+
+  // Factor 3 — Trend alignment (0-20)
+  var f3 = 0;
+  if(trendDir === 1  && isBuy)  f3 = 20;
+  else if(trendDir === -1 && !isBuy) f3 = 20;
+  else if(trendDir === 0) f3 = 8; // lateral — partial credit
+  else f3 = 0; // against trend
+
+  // Factor 4 — Neural Network agreement (0-15)
+  var f4 = 0;
+  if(nnSamples >= 5) { // only count after NN has learned a bit
+    if((isBuy  && nnLastDecision === 'BUY')  ||
+       (!isBuy && nnLastDecision === 'SELL')) f4 = 15;
+    else if(nnLastDecision === 'NEUTRAL')    f4 = 5;
+    else f4 = 0; // NN disagrees
+  } else {
+    f4 = 7; // neutral while learning
+  }
+
+  // Total composite confidence
+  var total = f1 + f2 + f3 + f4;
+  // Apply momentum bonus/penalty from recent streak
+  total = Math.max(0, Math.min(100, total + momentumBonus));
+
+  return {
+    total:  total,
+    votes:  f1,
+    strength: f2,
+    trend:  f3,
+    nn:     f4,
+    momentum: momentumBonus
+  };
+}
+
+function updateConfidenceBar(buyVotes, sellVotes, buyScore, sellScore, trendDir) {
+  const conf = calcCompositeConfidence(buyVotes, sellVotes, buyScore, sellScore, trendDir, nnLastDecision);
+  lastAIConfidence = conf.total;
+
   const bar = document.getElementById('aiConfBar');
   const val = document.getElementById('aiConfVal');
   if(!bar||!val) return;
-  bar.style.width = pct+'%';
-  const color = pct >= 75 ? 'var(--accent)' : pct >= 50 ? 'var(--warn)' : 'var(--danger)';
+
+  bar.style.width = conf.total + '%';
+  const color = conf.total >= 75 ? 'var(--accent)'
+              : conf.total >= 50 ? 'var(--warn)'
+              : 'var(--danger)';
   bar.style.background = color;
-  val.textContent = pct+'%';
+  val.textContent = conf.total + '%';
   val.style.color = color;
+
+  // Tooltip breakdown in signal detail
+  const detail = document.getElementById('signalDetail');
+  if(detail && conf.total > 0) {
+    detail.title = 'Votos:' + conf.votes + '% | Fuerza:' + conf.strength + '% | Tendencia:' + conf.trend + '% | NN:' + conf.nn + '%' + (conf.momentum !== 0 ? ' | Racha:'+conf.momentum+'%' : '');
+  }
 }
 
 function updateAIWeights(winner) {
@@ -3339,43 +3339,55 @@ function getSignal(rsi, macd, cfg) {
                     (emaSig===-1  ? aiWeights.ema  : 0);
 
   const maxScore = Math.max(buyScore, sellScore);
-  updateConfidenceBar(maxScore, 100);
+  updateConfidenceBar(buyVotes, sellVotes, buyScore, sellScore, trendDirection);
   updateATRDisplay(levels);
   updateStochDisplay(stoch);
 
-  const buyVotes  = [rsiSig,macdSig,bbSig,emaSig,stochSig].filter(s=>s===1).length;
-  const sellVotes = [rsiSig,macdSig,bbSig,emaSig,stochSig].filter(s=>s===-1).length;
+  const buyVotesArr  = [rsiSig,macdSig,bbSig,emaSig,stochSig].filter(s=>s===1).length;
+  const sellVotesArr = [rsiSig,macdSig,bbSig,emaSig,stochSig].filter(s=>s===-1).length;
+
+  // ── MOMENTUM FILTER — price direction last 3 candles ─────────
+  var priceMomentum = 0;
+  if(prices.length >= 4) {
+    var last = prices[prices.length-1];
+    var prev3 = prices[prices.length-4];
+    if(last > prev3 * 1.0002) priceMomentum = 1;
+    else if(last < prev3 * 0.9998) priceMomentum = -1;
+  }
+
+  // ── MINIMUM MARGIN FILTER — avoid near-equal scores ──────────
+  const scoreDiff = Math.abs(buyScore - sellScore);
 
   // ── FREEDOM MODE — IA decides everything ─────────────────────
   if(freedomMode) {
     updateFreedomAI(maxScore, vol, trendDirection);
-    // Freedom: solo bloquea señales absolutamente planas
     if(maxScore < 25) return 'NEUTRAL';
-    // Umbral dinámico reducido — más operaciones = más aprendizaje
-    const freeThreshold = 30 + (1 - lastAIConfidence/100)*10;
-    if(buyScore  >= freeThreshold && buyVotes  >= 1 && (tradeMode==='buy'  || tradeMode==='both')) return 'BUY';
-    if(sellScore >= freeThreshold && sellVotes >= 1 && (tradeMode==='sell' || tradeMode==='both')) return 'SELL';
+    const freeThreshold = 28 + (1 - lastAIConfidence/100)*10 - momentumBonus*0.2;
+    // Momentum confirms direction
+    const buyMomentumOk  = priceMomentum >= 0;
+    const sellMomentumOk = priceMomentum <= 0;
+    if(buyScore  >= freeThreshold && buyVotesArr  >= 1 && scoreDiff >= 3 && buyMomentumOk  && (tradeMode==='buy'  || tradeMode==='both')) return 'BUY';
+    if(sellScore >= freeThreshold && sellVotesArr >= 1 && scoreDiff >= 3 && sellMomentumOk && (tradeMode==='sell' || tradeMode==='both')) return 'SELL';
     return 'NEUTRAL';
   }
 
   // ── NORMAL MODE — profile hierarchy ──────────────────────────
-  // Solo bloquea si mercado completamente plano
   if(trendDirection === 0 && maxScore < 30) return 'NEUTRAL';
 
-  const profile   = PIRATE_PROFILES[activePirateProfile];
-  const minVotes  = profile ? Math.max(1, profile.minVotes - 1) : 2;
+  const profile  = PIRATE_PROFILES[activePirateProfile];
+  const minVotes = profile ? Math.max(1, profile.minVotes - 1) : 2;
 
-  // Dynamic threshold — más permisivo para más operaciones
   aiThreshold = trendDirection !== 0
     ? (vol > 0.7 ? 55 : 45) * (1/activePirateMult)
     : 60;
   aiThreshold = Math.max(30, Math.min(70, aiThreshold));
 
-  const canBuy  = buyScore  >= sellScore;
-  const canSell = sellScore >= buyScore;
+  // Minimum score margin of 5 points to avoid weak signals
+  const canBuy  = buyScore  >= sellScore  && scoreDiff >= 5 && priceMomentum >= 0;
+  const canSell = sellScore >= buyScore   && scoreDiff >= 5 && priceMomentum <= 0;
 
-  if(buyScore  >= aiThreshold && buyVotes  >= minVotes && canBuy  && (tradeMode==='buy'  || tradeMode==='both')) return 'BUY';
-  if(sellScore >= aiThreshold && sellVotes >= minVotes && canSell && (tradeMode==='sell' || tradeMode==='both')) return 'SELL';
+  if(buyScore  >= aiThreshold && buyVotesArr  >= minVotes && canBuy  && (tradeMode==='buy'  || tradeMode==='both')) return 'BUY';
+  if(sellScore >= aiThreshold && sellVotesArr >= minVotes && canSell && (tradeMode==='sell' || tradeMode==='both')) return 'SELL';
   return 'NEUTRAL';
 }
 
@@ -3806,6 +3818,7 @@ function closeOperation(id, won) {
   }
   trades++;
   updateAIWeights(won);
+  registerOpResult(won); // update momentum memory
   nnLearn(won);
   autoSave();
   renderOps();
@@ -4102,23 +4115,36 @@ function toggleFreedom() {
 function updateFreedomAI(confidence, volatility, trend) {
   if(!freedomMode) return;
   // Scale multiplier: high confidence + trending = more aggressive
-  const confFactor = confidence / 100;
-  const trendBonus = trend !== 0 ? 0.3 : 0;
-  const volPenalty = volatility > 0.8 ? -0.2 : 0;
-  aiFreeMult = Math.max(0.3, Math.min(3.0, 0.5 + confFactor*2.5 + trendBonus + volPenalty));
+  const confFactor  = confidence / 100;
+  const trendBonus  = trend !== 0 ? 0.3 : 0;
+  const volPenalty  = volatility > 0.8 ? -0.2 : 0;
+  // Streak adjustment — learn from recent results
+  const streakAdj   = consecutiveWins  >= 3 ?  0.3   // on a roll → more aggressive
+                    : consecutiveLoss  >= 3 ? -0.4   // cooling down → more conservative
+                    : consecutiveWins  >= 2 ?  0.15
+                    : consecutiveLoss  >= 2 ? -0.2
+                    : 0;
+  aiFreeMult = Math.max(0.3, Math.min(3.0, 0.5 + confFactor*2.5 + trendBonus + volPenalty + streakAdj));
+
+  // Recent win rate from last 10 ops
+  var recentWR = recentResults.length > 0
+    ? Math.round(recentResults.filter(function(r){return r;}).length / recentResults.length * 100)
+    : 0;
 
   const desc = aiFreeMult >= 2.0 ? '🔥 MUY AGRESIVO'
              : aiFreeMult >= 1.3 ? '⚡ AGRESIVO'
              : aiFreeMult >= 0.8 ? '⚖️ EQUILIBRADO'
              : '🛡️ CONSERVADOR';
   const el = document.getElementById('freedomAIDecision');
-  if(el) el.textContent = desc+' · ×'+aiFreeMult.toFixed(2)+' ATR';
+  if(el) el.textContent = desc + ' · ×' + aiFreeMult.toFixed(2) + ' ATR' +
+    (recentResults.length >= 3 ? ' · WR:'+recentWR+'%' : '');
 }
 
 function startBot(){
   if(ksTriggered){ addLog('🔴 Kill Switch activo — reinicia primero','sell'); return; }
   running=true;prices=[];rsiHistory=[];macdHistory=[];macdSigHistory=[];macdHistHistory=[];
   tradeMarkers=[];activeOps=[];opIdCounter=0;
+  recentResults=[]; consecutiveWins=0; consecutiveLoss=0; momentumBonus=0;
   ksSessionLoss=0; updateKSBar(); renderOps();
   startWatchdog();
   document.getElementById('btnStart').style.display='none';
