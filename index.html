@@ -2159,17 +2159,16 @@ function connectSpotWS() {
       if(sym && px) livePriceCache[sym] = px;
     } catch(_) {}
   };
-  wsSpot.onerror = () => wsLog('⚠ WS Spot error', 'sell');
+  wsSpot.onerror = () => wsLog('⚠ WS Spot error', 'warn');
   wsSpot.onclose = (ev) => {
-    wsLog('🔌 WS Spot cerrado ('+ev.code+') — reintentando...', 'warn');
     updateWsBadge();
     if(!apiConnected) return;
-    if(wsRetry.spot < WS_MAX_RETRY) {
-      const delay = WS_RETRY_BASE_MS * Math.pow(1.5, wsRetry.spot++);
-      wsReconnectTimers.spot = setTimeout(connectSpotWS, delay);
-    } else {
-      wsLog('❌ WS Spot: máx reintentos alcanzado', 'sell');
-    }
+    // Reconexión infinita — Testnet puede caerse temporalmente
+    wsRetry.spot++;
+    const delay = Math.min(WS_RETRY_BASE_MS * Math.pow(1.5, Math.min(wsRetry.spot, 10)), 60000);
+    const secs = Math.round(delay/1000);
+    wsLog('🔌 WS Spot caído — reconectando en ' + secs + 's (intento ' + wsRetry.spot + ')', 'warn');
+    wsReconnectTimers.spot = setTimeout(connectSpotWS, delay);
   };
 }
 
