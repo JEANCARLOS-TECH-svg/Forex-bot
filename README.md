@@ -1,4 +1,4 @@
-# 🤖 ForexBot v22
+# 🤖 ForexBot v23.5
 
 Bot de trading algorítmico con IA adaptativa. Archivo HTML único — no requiere instalación.
 
