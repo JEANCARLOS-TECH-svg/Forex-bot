@@ -2419,7 +2419,7 @@ const INSTRUMENTS = {
 
 // ======================== STATE ========================
 let currentInst='EUR/USD', currentCat='forex';
-let running=false, interval=null, prices=[], volumes=[], logCount=0;
+let running=false, interval=null, tickWorker=null, prices=[], volumes=[], logCount=0;
 let trades=0, wins=0, losses=0, lastSignal='none';
 let rsiHistory=[], macdHistory=[], macdSigHistory=[], macdHistHistory=[];
 
@@ -4494,11 +4494,39 @@ async function startBot(){
   document.getElementById('statusDot').classList.remove('off');
   document.getElementById('statusText').textContent='EN VIVO';
   addLog('▶ Bot iniciado — '+currentInst + (restored ? ' (sesión restaurada)' : ''),'warn');
-  interval=setInterval(tick,700);
+
+  // ── GUARDIÁN DE CONEXIÓN — Web Worker para tick anti-suspensión ──
+  // Chrome throttlea setInterval en pestañas inactivas a ~1/min.
+  // El Web Worker corre en hilo separado — Chrome no lo suspende.
+  try {
+    const workerCode = `
+      var tickInterval = null;
+      self.onmessage = function(e) {
+        if(e.data === 'start') {
+          if(tickInterval) clearInterval(tickInterval);
+          tickInterval = setInterval(function() { self.postMessage('tick'); }, 700);
+        } else if(e.data === 'stop') {
+          clearInterval(tickInterval);
+          tickInterval = null;
+        }
+      };
+    `;
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    tickWorker = new Worker(URL.createObjectURL(blob));
+    tickWorker.onmessage = function() { if(running) tick(); };
+    tickWorker.postMessage('start');
+    addLog('⚙️ Web Worker activo — tick protegido contra suspensión de Chrome', 'opt');
+  } catch(e) {
+    // Fallback a setInterval si el Worker falla
+    addLog('⚠️ Web Worker no disponible — usando setInterval', 'warn');
+    interval = setInterval(tick, 700);
+  }
 }
 function stopBot(){
   running=false;
-  clearInterval(interval);
+  // Detener Web Worker o setInterval según cuál esté activo
+  if(tickWorker) { tickWorker.postMessage('stop'); tickWorker.terminate(); tickWorker=null; }
+  if(interval)   { clearInterval(interval); interval=null; }
   stopPing();
   releaseWakeLock();
   localStorage.removeItem(SESSION_KEY);
@@ -5528,7 +5556,8 @@ function saveSessionState() {
       momentumBonus,
       currentInst,
       trendDirection,
-      lastAIConfidence
+      lastAIConfidence,
+      wasRunning: running  // Auto-arranque: guarda si el bot estaba activo
     };
     localStorage.setItem(SESSION_KEY, JSON.stringify(state));
   } catch(e) { console.warn('Session save error:', e); }
@@ -6143,6 +6172,21 @@ function unlockApp(pin) {
   const badge = document.getElementById('securityBadge');
   if(badge) { badge.textContent = '🔒 SEGURO'; badge.className = 'security-badge'; }
   setTimeout(function() { resizeAllCanvases(); redrawAllCharts(); }, 100);
+
+  // AUTO-ARRANQUE: si el bot estaba activo antes de cerrar/recargar, reinicia solo
+  setTimeout(function() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if(raw) {
+        const state = JSON.parse(raw);
+        const age = Date.now() - state.savedAt;
+        if(state.wasRunning && age < 600000) {
+          addLog('⚡ Auto-arranque — sesión previa detectada · reiniciando bot', 'warn');
+          startBot();
+        }
+      }
+    } catch(e) { console.warn('Auto-start error:', e); }
+  }, 600);
 }
 
 function pinForgot() {
