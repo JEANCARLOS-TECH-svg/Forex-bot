@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ForexBot v24.1 — PC Edition</title>
+<title>ForexBot v24.2 — PC Edition</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -1012,7 +1012,7 @@
       <div class="logo-icon">⚡</div>
       <div>
         <h1>Forex<span>Bot</span></h1>
-        <small>v24.1 — PC Edition</small>
+        <small>v24.2 — PC Edition</small>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -1459,6 +1459,24 @@
               </div>
             </div>
             <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted)" id="shadowState">INACTIVO</div>
+          </button>
+        </div>
+
+        <!-- TELEGRAM CONTROL REMOTO -->
+        <div style="margin-top:8px">
+          <button onclick="toggleTelegram()" id="tgBtn"
+            style="width:100%;padding:10px 14px;border-radius:12px;cursor:pointer;
+            display:flex;align-items:center;justify-content:space-between;
+            border:1px solid rgba(0,136,204,0.3);background:rgba(0,136,204,0.06);
+            font-family:'Space Mono',monospace;transition:all .3s">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:16px">📱</span>
+              <div style="text-align:left">
+                <div style="font-size:11px;font-weight:700;color:#0088cc">CONTROL TELEGRAM</div>
+                <div style="font-size:9px;color:var(--muted)">Controla el bot desde tu teléfono</div>
+              </div>
+            </div>
+            <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted)" id="tgState">INACTIVO</div>
           </button>
         </div>
 
@@ -3897,7 +3915,9 @@ function triggerKillSwitch() {
   addLog('🔴 KILL SWITCH ACTIVADO — pérdida máxima alcanzada', 'sell');
   addLog('⛔ Bot detenido automáticamente. Reinicio manual requerido.', 'sell');
 
-  // Disable start button
+  // Alerta inmediata al teléfono
+  tgAlert('🔴 KILL SWITCH ACTIVADO\nPérdida máxima alcanzada.\nBot detenido automáticamente.\nRequiere reinicio manual.');
+
   const btnStart = document.getElementById('btnStart');
   if(btnStart) { btnStart.disabled = true; btnStart.textContent = '🔴 KILL SWITCH ACTIVO'; }
 }
@@ -4602,6 +4622,134 @@ function importBrain() {
   };
   input.click();
 }
+
+// ======================== TELEGRAM CONTROL REMOTO ========================
+var TELEGRAM_TOKEN   = '8727925515:AAE-mrUKvUD3p3H2AhqlgIldhYV7aYQxtRc';
+var TELEGRAM_CHAT_ID = '6968371853';
+var telegramEnabled  = false;
+var telegramInterval = null;
+var lastUpdateId     = 0;
+
+// Enviar mensaje al teléfono
+async function tgSend(text) {
+  if(!telegramEnabled) return;
+  try {
+    var url = 'https://api.telegram.org/bot' + TELEGRAM_TOKEN + '/sendMessage';
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' })
+    });
+  } catch(e) { console.warn('Telegram send error:', e); }
+}
+
+// Leer comandos del teléfono
+async function tgPollCommands() {
+  if(!telegramEnabled) return;
+  try {
+    var url = 'https://api.telegram.org/bot' + TELEGRAM_TOKEN + '/getUpdates?offset=' + (lastUpdateId + 1) + '&timeout=2';
+    var res  = await fetch(url);
+    var data = await res.json();
+    if(!data.ok || !data.result.length) return;
+    data.result.forEach(function(update) {
+      lastUpdateId = update.update_id;
+      var msg = update.message;
+      if(!msg || !msg.text) return;
+      // Solo acepta comandos del chat autorizado
+      if(String(msg.chat.id) !== String(TELEGRAM_CHAT_ID)) return;
+      tgHandleCommand(msg.text.toLowerCase().trim());
+    });
+  } catch(e) { console.warn('Telegram poll error:', e); }
+}
+
+// Manejar comandos
+function tgHandleCommand(cmd) {
+  if(cmd === '/status' || cmd === 'status') {
+    var mode = trainingMode ? 'Entrenamiento' : freedomMode ? 'Libertad Absoluta' : 'Normal';
+    var estado = running ? '🟢 ACTIVO' : '🔴 INACTIVO';
+    tgSend(
+      '<b>ForexBot v24.2</b>\n' +
+      'Estado: ' + estado + '\n' +
+      'Modo: ' + mode + '\n' +
+      'Instrumento: ' + currentInst + '\n' +
+      'Ops activas: ' + activeOps.length + ' / ' + MAX_OPS + '\n' +
+      'Confianza IA: ' + lastAIConfidence + '%\n' +
+      'Tendencia: ' + (trendDirection === 1 ? '▲ ALCISTA' : trendDirection === -1 ? '▼ BAJISTA' : '⏸ LATERAL') + '\n' +
+      'Pérdida sesión: $' + Math.abs(ksSessionLoss).toFixed(2)
+    );
+    addLog('📱 Telegram: /status consultado', 'opt');
+
+  } else if(cmd === '/stop' || cmd === 'stop') {
+    if(running) { stopBot(); tgSend('⛔ Bot detenido desde Telegram.'); }
+    else tgSend('ℹ️ El bot ya estaba inactivo.');
+
+  } else if(cmd === '/start' || cmd === 'start') {
+    if(!running) { startBot(); tgSend('▶️ Bot iniciado desde Telegram.'); }
+    else tgSend('ℹ️ El bot ya estaba activo.');
+
+  } else if(cmd === '/training' || cmd === 'training') {
+    toggleTraining();
+    tgSend('🧠 Modo Entrenamiento: ' + (trainingMode ? 'ACTIVO' : 'INACTIVO'));
+
+  } else if(cmd === '/freedom' || cmd === 'freedom') {
+    toggleFreedom();
+    tgSend('⚡ Libertad Absoluta: ' + (freedomMode ? 'ACTIVO' : 'INACTIVO'));
+
+  } else if(cmd === '/shadow' || cmd === 'shadow') {
+    toggleShadow();
+    tgSend('👻 Shadow Trading: ' + (shadowMode ? 'ACTIVO' : 'INACTIVO'));
+
+  } else if(cmd === '/stats' || cmd === 'stats') {
+    var total = tradeHistory.length;
+    var wins  = tradeHistory.filter(function(t){ return t.result==='WIN'; }).length;
+    var wr    = total > 0 ? ((wins/total)*100).toFixed(1) : '0';
+    tgSend(
+      '<b>📊 Estadísticas</b>\n' +
+      'Operaciones: ' + total + '\n' +
+      'Ganadas: ' + wins + '\n' +
+      'Perdidas: ' + (total - wins) + '\n' +
+      'Win Rate: ' + wr + '%\n' +
+      'Muestras NN: ' + nnSamples
+    );
+
+  } else if(cmd === '/help' || cmd === 'help') {
+    tgSend(
+      '<b>🤖 ForexBot Comandos</b>\n\n' +
+      '/status — Estado actual\n' +
+      '/start — Iniciar bot\n' +
+      '/stop — Detener bot\n' +
+      '/training — Toggle entrenamiento\n' +
+      '/freedom — Toggle libertad absoluta\n' +
+      '/shadow — Toggle shadow trading\n' +
+      '/stats — Estadísticas\n' +
+      '/help — Esta ayuda'
+    );
+  } else {
+    tgSend('❓ Comando no reconocido. Escribe /help para ver los comandos disponibles.');
+  }
+}
+
+function toggleTelegram() {
+  telegramEnabled = !telegramEnabled;
+  var btn   = document.getElementById('tgBtn');
+  var state = document.getElementById('tgState');
+  if(telegramEnabled) {
+    // Iniciar polling cada 3 segundos
+    telegramInterval = setInterval(tgPollCommands, 3000);
+    if(btn)   { btn.style.borderColor='rgba(0,136,204,0.6)'; btn.style.background='rgba(0,136,204,0.12)'; }
+    if(state) { state.textContent='ACTIVO'; state.style.color='#0088cc'; }
+    tgSend('✅ ForexBot v24.2 conectado.\nEscribe /help para ver los comandos.');
+    addLog('📱 Telegram ACTIVO — control remoto habilitado', 'buy');
+  } else {
+    clearInterval(telegramInterval);
+    if(btn)   { btn.style.borderColor='rgba(0,136,204,0.3)'; btn.style.background='rgba(0,136,204,0.06)'; }
+    if(state) { state.textContent='INACTIVO'; state.style.color='var(--muted)'; }
+    addLog('📱 Telegram desactivado', 'warn');
+  }
+}
+
+// Alertas automáticas al teléfono
+function tgAlert(msg) { tgSend('🚨 <b>ALERTA</b>\n' + msg); }
 
 // ======================== WAKE LOCK ========================
 let wakeLock = null;
