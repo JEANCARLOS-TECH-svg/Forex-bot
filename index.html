@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ForexBot v24.10.1 — PC Edition</title>
+<title>ForexBot v24.10.2 — PC Edition</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -1012,7 +1012,7 @@
       <div class="logo-icon">⚡</div>
       <div>
         <h1>Forex<span>Bot</span></h1>
-        <small>v24.10.1 — PC Edition</small>
+        <small>v24.10.2 — PC Edition</small>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -3378,6 +3378,34 @@ function calcMACD(p,fast,slow,sig){
   for(let i=slow;i<p.length;i++)arr.push(calcEMA(p.slice(0,i+1),fast)-calcEMA(p.slice(0,i+1),slow));
   return{macd:arr[arr.length-1],signal:calcEMA(arr,sig),hist:arr[arr.length-1]-calcEMA(arr,sig)};
 }
+
+// ── AUTO-AJUSTE DE DIFERENCIAL — Capa 3 ─────────────────────────
+// La referencia es el mercado: ATR y ADX deciden cuánta ventaja
+// necesita una señal para ser válida. No un número fijo.
+function autoAjustarDiferencial(adx, mode) {
+  var diffBase = 3.0; // Estándar de seguridad original
+
+  // Freedom o Training — margen mínimo técnico
+  if(mode === 'freedom' || mode === 'training') {
+    diffBase = 0.5;
+  }
+  // Tendencia clara — no necesita victoria aplastante
+  else if(adx > 30) {
+    diffBase = 1.5;
+  }
+  // Mercado lateral — más estrictos para evitar serrucho
+  else if(adx < 20) {
+    diffBase = 4.0;
+  }
+
+  // ADX árbitro adicional — si hay tendencia, siempre reducir
+  if(adx > 30 && mode !== 'freedom' && mode !== 'training') {
+    diffBase = Math.max(0.5, diffBase - 1.0);
+  }
+
+  return Math.max(0.5, diffBase); // Nunca menos de 0.5
+}
+
 function getSignal(rsi, macd, cfg) {
   const price   = prices[prices.length-1];
   const stoch   = calcStochRSI();
@@ -3511,8 +3539,9 @@ function getSignal(rsi, macd, cfg) {
     var fThresh = trainingMode
       ? Math.max(15, Math.min(25, 20 - momentumBonus*0.3))
       : Math.max(25, Math.min(40, 28 - momentumBonus*0.3));
-    if(fBuy>=fThresh  && scoreDiff>=3 && (tradeMode==='buy' ||tradeMode==='both')) return 'BUY';
-    if(fSell>=fThresh && scoreDiff>=3 && (tradeMode==='sell'||tradeMode==='both')) return 'SELL';
+    var fDiff = autoAjustarDiferencial(regime.adx, trainingMode ? 'training' : 'freedom');
+    if(fBuy>=fThresh  && scoreDiff>=fDiff && (tradeMode==='buy' ||tradeMode==='both')) return 'BUY';
+    if(fSell>=fThresh && scoreDiff>=fDiff && (tradeMode==='sell'||tradeMode==='both')) return 'SELL';
     return 'NEUTRAL';
   }
 
@@ -3536,7 +3565,10 @@ function getSignal(rsi, macd, cfg) {
   // PVT suavizado con WMA
   var pvtSmooth = calcPVTSmoothed();
 
-  if(nBuy>=nThresh && buyVotesArr>=1 && scoreDiff>=5 && (tradeMode==='buy'||tradeMode==='both')) {
+  var nDiff = autoAjustarDiferencial(regime.adx, 'normal');
+  // Log diferencial para diagnóstico — visible en consola F12
+  if(prices.length % 50 === 0) addLog('[Capa 3] Diff requerido: ' + nDiff.toFixed(1) + ' | Diff actual: ' + scoreDiff.toFixed(2) + ' | ADX: ' + regime.adx.toFixed(1), 'opt');
+  if(nBuy>=nThresh && buyVotesArr>=1 && scoreDiff>=nDiff && (tradeMode==='buy'||tradeMode==='both')) {
 
     // PVT suavizado — acelerador en tendencia fuerte
     if(volumes.length >= 4) {
@@ -3568,7 +3600,7 @@ function getSignal(rsi, macd, cfg) {
     return 'BUY';
   }
 
-  if(nSell>=nThresh && sellVotesArr>=1 && scoreDiff>=5 && (tradeMode==='sell'||tradeMode==='both')) {
+  if(nSell>=nThresh && sellVotesArr>=1 && scoreDiff>=nDiff && (tradeMode==='sell'||tradeMode==='both')) {
 
     if(volumes.length >= 4) {
       var pvtOkS = regime.adx > 40 ? !pvtSmooth.bullish : pvtSmooth.bearish;
@@ -5426,7 +5458,7 @@ function tgHandleCommand(cmd) {
     var mode = trainingMode ? 'Entrenamiento' : freedomMode ? 'Libertad Absoluta' : 'Normal';
     var estado = running ? '🟢 ACTIVO' : '🔴 INACTIVO';
     tgSend(
-      '<b>ForexBot v24.10.1</b>\n' +
+      '<b>ForexBot v24.10.2</b>\n' +
       'Estado: ' + estado + '\n' +
       'Modo: ' + mode + '\n' +
       'Instrumento: ' + currentInst + '\n' +
@@ -5496,7 +5528,7 @@ function toggleTelegram() {
     telegramInterval = setInterval(tgPollCommands, 3000);
     if(btn)   { btn.style.borderColor='rgba(0,136,204,0.6)'; btn.style.background='rgba(0,136,204,0.12)'; }
     if(state) { state.textContent='ACTIVO'; state.style.color='#0088cc'; }
-    tgSend('✅ ForexBot v24.10.1 conectado.\nEscribe /help para ver los comandos.');
+    tgSend('✅ ForexBot v24.10.2 conectado.\nEscribe /help para ver los comandos.');
     addLog('📱 Telegram ACTIVO — control remoto habilitado', 'buy');
   } else {
     clearInterval(telegramInterval);
