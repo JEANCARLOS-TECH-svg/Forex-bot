@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ForexBot v23.5 — PC Edition</title>
+<title>ForexBot v24.1 — PC Edition</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -1012,7 +1012,7 @@
       <div class="logo-icon">⚡</div>
       <div>
         <h1>Forex<span>Bot</span></h1>
-        <small>v23.5 — PC Edition</small>
+        <small>v24.1 — PC Edition</small>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -1029,6 +1029,7 @@
     <button class="tab active" onclick="switchTab('bot')">🤖 Bot</button>
     <button class="tab" onclick="switchTab('indicators')">📊 Indicadores</button>
     <button class="tab" onclick="switchTab('history')">📋 Historial</button>
+    <button class="tab" onclick="switchTab('shadow')">👻 Shadow</button>
     <button class="tab" onclick="switchTab('opt')">🧬 Optimizador</button>
   </div>
 
@@ -1305,6 +1306,21 @@
             <span>Autoguardado cada 5 operaciones</span>
             <span id="dataOpCount" style="color:var(--accent)">0 ops</span>
           </div>
+          <!-- BRAIN EXPORT/IMPORT -->
+          <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+            <div style="font-size:9px;color:var(--purple);font-family:'Space Mono',monospace;letter-spacing:1.5px;margin-bottom:7px">🧠 CEREBRO IA</div>
+            <div class="data-btn-row">
+              <button class="data-btn" style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);color:var(--purple)" onclick="exportBrain()">
+                📦 Exportar Cerebro
+              </button>
+              <button class="data-btn" style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);color:var(--purple)" onclick="importBrain()">
+                📂 Importar Cerebro
+              </button>
+            </div>
+            <div style="font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:5px;text-align:center" id="brainStatus">
+              Muestras NN: <span id="brainSamples" style="color:var(--purple)">0</span>
+            </div>
+          </div>
         </div>
 
         <!-- PROTECTION BLOCKS -->
@@ -1425,6 +1441,24 @@
               </div>
             </div>
             <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted)" id="trainingState">INACTIVO</div>
+          </button>
+        </div>
+
+        <!-- SHADOW TRADING -->
+        <div style="margin-top:8px">
+          <button onclick="toggleShadow()" id="shadowBtn"
+            style="width:100%;padding:10px 14px;border-radius:12px;cursor:pointer;
+            display:flex;align-items:center;justify-content:space-between;
+            border:1px solid rgba(59,158,255,0.3);background:rgba(59,158,255,0.06);
+            font-family:'Space Mono',monospace;transition:all .3s">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:16px">👻</span>
+              <div style="text-align:left">
+                <div style="font-size:11px;font-weight:700;color:var(--accent2)">SHADOW TRADING</div>
+                <div style="font-size:9px;color:var(--muted)">Simula sin ejecutar — valida la estrategia</div>
+              </div>
+            </div>
+            <div style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted)" id="shadowState">INACTIVO</div>
           </button>
         </div>
 
@@ -1770,6 +1804,71 @@
     </div>
   </div>
 
+
+  <!-- ===== TAB SHADOW ===== -->
+  <div class="tab-content" id="tab-shadow">
+    <div style="display:flex;flex-direction:column;gap:12px;padding:4px 0">
+
+      <!-- Header -->
+      <div class="panel" style="padding:14px;background:rgba(59,158,255,0.04);border-color:rgba(59,158,255,0.2)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:20px">👻</span>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:var(--accent2)">SHADOW TRADING</div>
+            <div style="font-size:9px;color:var(--muted);font-family:'Space Mono',monospace">Valida la estrategia sin ejecutar órdenes reales</div>
+          </div>
+          <div style="margin-left:auto;font-size:10px;font-family:'Space Mono',monospace;padding:4px 10px;border-radius:20px;background:rgba(59,158,255,0.1);border:1px solid rgba(59,158,255,0.3);color:var(--accent2)" id="shadowStatusBadge">INACTIVO</div>
+        </div>
+        <div style="font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;line-height:1.6">
+          Corre el bot 48h en modo Shadow antes de usar dinero real. El bot ejecuta toda la lógica pero no envía órdenes a Binance. Compara el resultado teórico con el mercado real.
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="panel" style="padding:14px">
+        <div class="panel-title" style="margin-bottom:10px">📊 Resultados Shadow</div>
+        <div class="stats-row" style="margin-bottom:10px">
+          <div class="stat"><div class="stat-val c-blue" id="sh_ops">0</div><div class="stat-lbl">OPS</div></div>
+          <div class="stat"><div class="stat-val c-green" id="sh_wins">0</div><div class="stat-lbl">WINS</div></div>
+          <div class="stat"><div class="stat-val c-red" id="sh_losses">0</div><div class="stat-lbl">LOSS</div></div>
+          <div class="stat"><div class="stat-val c-pur" id="sh_wr">—%</div><div class="stat-lbl">WR</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="stat"><div class="stat-val c-green" id="sh_profit">$0.00</div><div class="stat-lbl">GANANCIA TEÓRICA</div></div>
+          <div class="stat"><div class="stat-val" id="sh_slippage" style="color:var(--warn)">0.00%</div><div class="stat-lbl">SLIPPAGE PROM.</div></div>
+        </div>
+      </div>
+
+      <!-- ADX Regime -->
+      <div class="panel" style="padding:14px">
+        <div class="panel-title" style="margin-bottom:10px">📐 Régimen de Mercado (ADX)</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:10px;font-family:'Space Mono',monospace;color:var(--muted)">ADX ACTUAL</span>
+          <span style="font-size:18px;font-weight:800;font-family:'Space Mono',monospace;color:var(--accent2)" id="adxValue">—</span>
+        </div>
+        <div style="height:6px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:6px">
+          <div id="adxBar" style="height:100%;width:0%;border-radius:4px;background:var(--accent);transition:width .5s,background .3s"></div>
+        </div>
+        <div style="font-size:10px;font-family:'Space Mono',monospace;text-align:center" id="adxRegime" style="color:var(--muted)">Esperando datos...</div>
+        <div style="margin-top:8px;font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;line-height:1.6">
+          ADX &lt; 25 → Lateral → RSI + Bollinger deciden<br>
+          ADX ≥ 25 → Tendencia → MACD + EMA deciden
+        </div>
+      </div>
+
+      <!-- Shadow log -->
+      <div class="panel" style="padding:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div class="panel-title" style="margin-bottom:0">📋 Operaciones Fantasma</div>
+          <button onclick="clearShadowLog()" style="font-size:9px;font-family:'Space Mono',monospace;padding:3px 8px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:4px;cursor:pointer">Limpiar</button>
+        </div>
+        <div id="shadowLogContainer" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">
+          <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;text-align:center;padding:20px">Sin operaciones shadow aún</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <div class="tab-content" id="tab-opt">
     <div class="opt-pro-grid">
@@ -2251,14 +2350,14 @@ const INSTRUMENTS = {
   'EUR/GBP': { base:0.8550,  vol:0.0004, icon:'💶',  cat:'FOREX — Cross',           decimals:5, pipMul:10000 },
   'EUR/JPY': { base:162.10,  vol:0.09,   icon:'💱',  cat:'FOREX — Cross',           decimals:3, pipMul:100 },
   'GBP/JPY': { base:189.50,  vol:0.12,   icon:'💱',  cat:'FOREX — Cross',           decimals:3, pipMul:100 },
-  'BTC/USD': { base:67500,   vol:450,    icon:'₿',   cat:'CRYPTO — Bitcoin',        decimals:2, pipMul:1 },
-  'ETH/USD': { base:3420,    vol:28,     icon:'Ξ',   cat:'CRYPTO — Ethereum',       decimals:2, pipMul:1 },
-  'BNB/USD': { base:580,     vol:4,      icon:'🔶',  cat:'CRYPTO — Binance',        decimals:2, pipMul:1 },
-  'XRP/USD': { base:0.615,   vol:0.006,  icon:'💧',  cat:'CRYPTO — Ripple',         decimals:4, pipMul:1000 },
-  'SOL/USD': { base:178,     vol:2.2,    icon:'◎',   cat:'CRYPTO — Solana',         decimals:2, pipMul:1 },
-  'DOGE/USD':{ base:0.165,   vol:0.002,  icon:'🐕',  cat:'CRYPTO — Dogecoin',       decimals:4, pipMul:1000 },
-  'ADA/USD': { base:0.485,   vol:0.005,  icon:'🔵',  cat:'CRYPTO — Cardano',        decimals:4, pipMul:1000 },
-  'LTC/USD': { base:95,      vol:1.2,    icon:'Ł',   cat:'CRYPTO — Litecoin',       decimals:2, pipMul:1 },
+  'BTC/USD': { base:67500,   vol:450,    icon:'₿',   cat:'CRYPTO — Bitcoin',        decimals:2, pipMul:1,    binanceSymbol:'BTCUSDT' },
+  'ETH/USD': { base:3420,    vol:28,     icon:'Ξ',   cat:'CRYPTO — Ethereum',       decimals:2, pipMul:1,    binanceSymbol:'ETHUSDT' },
+  'BNB/USD': { base:580,     vol:4,      icon:'🔶',  cat:'CRYPTO — Binance',        decimals:2, pipMul:1,    binanceSymbol:'BNBUSDT' },
+  'XRP/USD': { base:0.615,   vol:0.006,  icon:'💧',  cat:'CRYPTO — Ripple',         decimals:4, pipMul:1000, binanceSymbol:'XRPUSDT' },
+  'SOL/USD': { base:178,     vol:2.2,    icon:'◎',   cat:'CRYPTO — Solana',         decimals:2, pipMul:1,    binanceSymbol:'SOLUSDT' },
+  'DOGE/USD':{ base:0.165,   vol:0.002,  icon:'🐕',  cat:'CRYPTO — Dogecoin',       decimals:4, pipMul:1000, binanceSymbol:'DOGEUSDT'},
+  'ADA/USD': { base:0.485,   vol:0.005,  icon:'🔵',  cat:'CRYPTO — Cardano',        decimals:4, pipMul:1000, binanceSymbol:'ADAUSDT' },
+  'LTC/USD': { base:95,      vol:1.2,    icon:'Ł',   cat:'CRYPTO — Litecoin',       decimals:2, pipMul:1,    binanceSymbol:'LTCUSDT' },
   'XAU/USD': { base:2320,    vol:3.5,    icon:'🥇',  cat:'METAL — Oro',             decimals:2, pipMul:1 },
   'XAG/USD': { base:27.50,   vol:0.12,   icon:'🥈',  cat:'METAL — Plata',           decimals:3, pipMul:10 },
   'XPT/USD': { base:985,     vol:2.8,    icon:'💎',  cat:'METAL — Platino',         decimals:2, pipMul:1 },
@@ -2647,7 +2746,7 @@ function updateAIWeights(winner) {
       // Faster learning: bigger reward for strong consensus signals
       const consensus = Object.values(lastIndSignals).filter(function(s){ return s===lastIndSignals[ind]; }).length;
       const lr = LEARNING_RATE * (consensus >= 3 ? 1.5 : 1);
-      aiWeights[ind] = Math.max(5, Math.min(60, aiWeights[ind] + (wasRight ? lr : -lr)));
+      aiWeights[ind] = Math.max(10, Math.min(60, aiWeights[ind] + (wasRight ? lr : -lr)));
     }
   });
 
@@ -3234,6 +3333,10 @@ function getSignal(rsi, macd, cfg) {
   trendDirection = detectTrend();
   updateTrendBadge(trendDirection);
 
+  // ── FILTRO DE RÉGIMEN ADX ─────────────────────────────────────
+  var regime = getMarketRegime();
+  updateADXDisplay(regime.adx, regime.trending);
+
   // ── LAYER 2: Individual indicator signals ────────────────────
   const rsiSig   = rsi < cfg.rsiOS ? 1 : rsi > cfg.rsiOB ? -1 : 0;
   const macdSig  = macd.hist > 0 && macd.macd > macd.signal ? 1
@@ -3243,7 +3346,6 @@ function getSignal(rsi, macd, cfg) {
   const emaFast  = calcEMA(prices, 9);
   const emaSlow  = calcEMA(prices, 21);
   const emaSig   = getEMASignal(emaFast, emaSlow);
-  // Stochastic RSI signal — fine entry timing
   const stochSig = stoch.k < 20 ? 1 : stoch.k > 80 ? -1 : 0;
 
   lastIndSignals.rsi  = rsiSig;
@@ -3251,17 +3353,24 @@ function getSignal(rsi, macd, cfg) {
   lastIndSignals.bb   = bbSig;
   lastIndSignals.ema  = emaSig;
 
-  // ── LAYER 3: Weighted AI scores ──────────────────────────────
-  const buyScore  = (rsiSig===1   ? aiWeights.rsi  : 0) +
-                    (macdSig===1  ? aiWeights.macd : 0) +
-                    (bbSig===1    ? aiWeights.bb   : 0) +
-                    (emaSig===1   ? aiWeights.ema  : 0) +
-                    (divSig===1   ? divBonus        : 0);
-  const sellScore = (rsiSig===-1  ? aiWeights.rsi  : 0) +
-                    (macdSig===-1 ? aiWeights.macd : 0) +
-                    (bbSig===-1   ? aiWeights.bb   : 0) +
-                    (emaSig===-1  ? aiWeights.ema  : 0) +
-                    (divSig===-1  ? divBonus        : 0);
+  // ── LAYER 3: Weighted AI scores con filtro de régimen ─────────
+  // ADX >= 25 (tendencia) → MACD + EMA tienen peso total, RSI ignorado
+  // ADX < 25  (lateral)  → RSI + BB tienen peso total, MACD/EMA reducidos
+  var rsiWeight  = regime.trending ? 0              : aiWeights.rsi;
+  var macdWeight = regime.trending ? aiWeights.macd : aiWeights.macd * 0.4;
+  var bbWeight   = regime.trending ? aiWeights.bb * 0.4 : aiWeights.bb;
+  var emaWeight  = regime.trending ? aiWeights.ema  : aiWeights.ema * 0.4;
+
+  const buyScore  = (rsiSig===1   ? rsiWeight  : 0) +
+                    (macdSig===1  ? macdWeight : 0) +
+                    (bbSig===1    ? bbWeight   : 0) +
+                    (emaSig===1   ? emaWeight  : 0) +
+                    (divSig===1   ? divBonus   : 0);
+  const sellScore = (rsiSig===-1  ? rsiWeight  : 0) +
+                    (macdSig===-1 ? macdWeight : 0) +
+                    (bbSig===-1   ? bbWeight   : 0) +
+                    (emaSig===-1  ? emaWeight  : 0) +
+                    (divSig===-1  ? divBonus   : 0);
 
   const maxScore = Math.max(buyScore, sellScore);
   updateConfidenceBar(buyVotes, sellVotes, buyScore, sellScore, trendDirection);
@@ -3593,22 +3702,48 @@ function tick(){
 
   if(signal!=='NEUTRAL'&&!protBlocked){
     updateOpsProgress(np);
-    if(canOpenNewOp(signal)) {
+    if(shadowMode) {
+      // Shadow mode — registra sin ejecutar
+      if(canOpenNewOp(signal)) {
+        const levels = getATRLevels();
+        const regime = getMarketRegime();
+        const stepSize = symbolStepSize[currentInst] || null;
+        const dynSize = calcDynamicPositionSize(tradeAmount, levels.atrPips / (INSTRUMENTS[currentInst] ? INSTRUMENTS[currentInst].pipMul : 10000), stepSize);
+        recordShadowTrade(signal, np, levels.sl, levels.tp, dynSize);
+        addLog('👻 Shadow ' + signal + ' @ ' + np.toFixed(INSTRUMENTS[currentInst].decimals) + ' | ADX:' + regime.adx + ' | Conf:' + lastAIConfidence + '%', 'buy');
+      }
+    } else if(canOpenNewOp(signal)) {
       tradeMarkers.push({ priceIndex: prices.length - 1, price: np, type: signal });
       if(tradeMarkers.length > 20) tradeMarkers.shift();
       const levels = getATRLevels();
+      const regime = getMarketRegime();
+      const stepSize = symbolStepSize[currentInst] || null;
+      const dynSize = calcDynamicPositionSize(tradeAmount, levels.atrPips / (INSTRUMENTS[currentInst] ? INSTRUMENTS[currentInst].pipMul : 10000), stepSize);
       const op = openOperation(signal, ps, levels.sl, levels.tp, selectedCurrency.code);
+      // Log detallado de decisión
+      addLog('📋 Decisión: ' + signal +
+        ' | ADX:' + regime.adx + (regime.trending ? '(T)' : '(L)') +
+        ' | Conf:' + lastAIConfidence + '%' +
+        ' | RSI:' + rsi.toFixed(1) +
+        ' | Tamaño:' + (dynSize ? dynSize.toFixed(5) : tradeAmount),
+        signal === 'BUY' ? 'buy' : 'sell');
       trades++;
     }
   } else {
     updateOpsProgress(np);
+    // Log por qué no operó — solo cada 30 ticks para no saturar
+    if(running && !shadowMode && (trades % 30 === 0 || prices.length === 30)) {
+      const regime = getMarketRegime();
+      if(signal === 'NEUTRAL') {
+        addLog('⏸ Sin señal | ADX:' + regime.adx + (regime.trending?'(T)':'(L)') + ' | Conf:' + lastAIConfidence + '% | RSI:' + rsi.toFixed(1), 'warn');
+      }
+    }
   }
   lastSignal=signal;
   updateDiagnostic(signal, protBlocked, rsi);
   drawPrice();
   if(indRSI) drawRSI(cfg.rsiOB,cfg.rsiOS);
   if(indMACD) drawMACD();
-
   if(indEMA) drawEMA();
 }
 function updateStats(){
@@ -4041,6 +4176,8 @@ function updateNNDisplay(inputs, result) {
   // Training count
   const sampEl = document.getElementById('nnSamples');
   if(sampEl) sampEl.textContent = nnSamples;
+  var brainSampEl = document.getElementById('brainSamples');
+  if(brainSampEl) brainSampEl.textContent = nnSamples;
 }
 
 /** Update ATR display in UI */
@@ -4184,7 +4321,6 @@ async function startBot(){
   const restored = restoreSessionState();
 
   if(!restored) {
-    // Sesión fresca — limpiar todo
     prices=[];rsiHistory=[];macdHistory=[];macdSigHistory=[];macdHistHistory=[];
     recentResults=[];consecutiveWins=0;consecutiveLoss=0;momentumBonus=0;
   }
@@ -4197,6 +4333,14 @@ async function startBot(){
   startWatchdog();
   startPing();
   await requestWakeLock();
+
+  // Obtener stepSize del instrumento actual desde Binance
+  var inst = INSTRUMENTS[currentInst];
+  if(inst && inst.binanceSymbol) {
+    fetchStepSize(inst.binanceSymbol).then(function(step) {
+      if(step) symbolStepSize[currentInst] = step;
+    });
+  }
 
   document.getElementById('btnStart').style.display='none';
   document.getElementById('btnStop').style.display='block';
@@ -4216,6 +4360,247 @@ function stopBot(){
   document.getElementById('statusDot').classList.add('off');
   document.getElementById('statusText').textContent='INACTIVO';
   addLog('■ Bot detenido','warn');
+}
+
+// ======================== ADX — FILTRO DE RÉGIMEN ========================
+function calcADX(period) {
+  if(!period) period = 14;
+  if(prices.length < period * 2) return 0;
+  var slice = prices.slice(-(period * 2));
+  var trueRanges = [], plusDM = [], minusDM = [];
+  for(var i = 1; i < slice.length; i++) {
+    var high = slice[i], low = slice[i], prev = slice[i-1];
+    // Simplified ATR-based ADX using price differences
+    var tr = Math.abs(high - prev);
+    var pdm = Math.max(high - prev, 0);
+    var mdm = Math.max(prev - low, 0);
+    if(pdm > mdm) { plusDM.push(pdm); minusDM.push(0); }
+    else if(mdm > pdm) { plusDM.push(0); minusDM.push(mdm); }
+    else { plusDM.push(0); minusDM.push(0); }
+    trueRanges.push(tr);
+  }
+  var atr14 = trueRanges.slice(-period).reduce(function(a,b){return a+b;},0) / period || 1;
+  var pdi = (plusDM.slice(-period).reduce(function(a,b){return a+b;},0) / period) / atr14 * 100;
+  var mdi = (minusDM.slice(-period).reduce(function(a,b){return a+b;},0) / period) / atr14 * 100;
+  var dx = Math.abs(pdi - mdi) / (pdi + mdi || 1) * 100;
+  return Math.min(100, Math.round(dx));
+}
+
+let lastRegimeTrending = false; // memoria del régimen anterior
+
+function getMarketRegime() {
+  var adx = calcADX(14);
+  // Zona de histéresis ±0.5 — evita cambios de régimen por ruido
+  var trending;
+  if(adx >= 25.5)      trending = true;   // entra en tendencia
+  else if(adx <= 24.5) trending = false;  // entra en lateral
+  else                 trending = lastRegimeTrending; // zona gris — mantiene régimen anterior
+  lastRegimeTrending = trending;
+  return { adx: adx, trending: trending };
+}
+
+function updateADXDisplay(adx, trending) {
+  var valEl  = document.getElementById('adxValue');
+  var barEl  = document.getElementById('adxBar');
+  var regEl  = document.getElementById('adxRegime');
+  if(valEl) { valEl.textContent = adx; valEl.style.color = trending ? 'var(--accent)' : 'var(--warn)'; }
+  if(barEl) { barEl.style.width = Math.min(100, adx) + '%'; barEl.style.background = trending ? 'var(--accent)' : 'var(--warn)'; }
+  if(regEl) { regEl.textContent = trending ? '📈 TENDENCIA — MACD + EMA activos' : '⏸ LATERAL — RSI + Bollinger activos'; regEl.style.color = trending ? 'var(--accent)' : 'var(--warn)'; }
+}
+
+// ======================== SHADOW TRADING ========================
+let shadowMode   = false;
+let shadowTrades = [];
+let shadowWins   = 0;
+let shadowLosses = 0;
+let shadowProfit = 0;
+let shadowSlippageSum = 0;
+
+function toggleShadow() {
+  shadowMode = !shadowMode;
+  var btn   = document.getElementById('shadowBtn');
+  var state = document.getElementById('shadowState');
+  var badge = document.getElementById('shadowStatusBadge');
+  if(btn) { btn.style.borderColor = shadowMode ? 'rgba(59,158,255,0.6)' : 'rgba(59,158,255,0.3)'; btn.style.background = shadowMode ? 'rgba(59,158,255,0.12)' : 'rgba(59,158,255,0.06)'; }
+  if(state) { state.textContent = shadowMode ? 'ACTIVO' : 'INACTIVO'; state.style.color = shadowMode ? 'var(--accent2)' : 'var(--muted)'; }
+  if(badge) { badge.textContent = shadowMode ? 'ACTIVO' : 'INACTIVO'; badge.style.color = shadowMode ? 'var(--accent2)' : 'var(--muted)'; }
+  addLog(shadowMode ? '👻 Shadow Trading ACTIVO — simulando sin ejecutar' : '👻 Shadow Trading desactivado', shadowMode ? 'buy' : 'warn');
+}
+
+function recordShadowTrade(signal, entryPrice, sl, tp, size) {
+  var id = shadowTrades.length + 1;
+  var trade = { id, signal, entryPrice, sl, tp, size, openTime: Date.now(), result: null };
+  shadowTrades.push(trade);
+  // Simulate result based on next price movement
+  setTimeout(function() {
+    if(prices.length < 2) return;
+    var currentPrice = prices[prices.length - 1];
+    var diff = (currentPrice - entryPrice) * (signal === 'BUY' ? 1 : -1);
+    var pips = diff * (INSTRUMENTS[currentInst] ? INSTRUMENTS[currentInst].pipMul : 10000);
+    var won = pips >= tp;
+    var lost = pips <= -sl;
+    if(won || lost) {
+      trade.result = won ? 'WIN' : 'LOSS';
+      var pnl = won ? tradeAmount * 2 : -tradeAmount;
+      shadowProfit += pnl;
+      if(won) shadowWins++; else shadowLosses++;
+      // Slippage — diferencia entre señal y precio de entrada real
+      var slippage = Math.abs(currentPrice - entryPrice) / entryPrice * 100;
+      shadowSlippageSum += slippage;
+      updateShadowStats();
+      addShadowLogEntry(trade, pnl);
+    }
+  }, 3000);
+  addLog('👻 Shadow #' + id + ' — ' + signal + ' @ ' + entryPrice.toFixed(INSTRUMENTS[currentInst].decimals), 'buy');
+}
+
+function updateShadowStats() {
+  var total = shadowWins + shadowLosses;
+  var wr = total > 0 ? ((shadowWins/total)*100).toFixed(1)+'%' : '—%';
+  var avgSlip = total > 0 ? (shadowSlippageSum/total).toFixed(3)+'%' : '0.00%';
+  var el = function(id) { return document.getElementById(id); };
+  if(el('sh_ops'))     el('sh_ops').textContent = total;
+  if(el('sh_wins'))    el('sh_wins').textContent = shadowWins;
+  if(el('sh_losses'))  el('sh_losses').textContent = shadowLosses;
+  if(el('sh_wr'))      el('sh_wr').textContent = wr;
+  if(el('sh_profit'))  { el('sh_profit').textContent = (shadowProfit >= 0 ? '+$' : '-$') + Math.abs(shadowProfit).toFixed(2); el('sh_profit').style.color = shadowProfit >= 0 ? 'var(--accent)' : 'var(--danger)'; }
+  if(el('sh_slippage')) el('sh_slippage').textContent = avgSlip;
+}
+
+function addShadowLogEntry(trade, pnl) {
+  var container = document.getElementById('shadowLogContainer');
+  if(!container) return;
+  var empty = container.querySelector('div[style*="text-align:center"]');
+  if(empty) empty.remove();
+  var isWin = pnl > 0;
+  var entry = document.createElement('div');
+  entry.style.cssText = 'padding:8px 10px;border-radius:8px;border:1px solid ' + (isWin ? 'rgba(0,229,160,0.2)' : 'rgba(255,77,106,0.2)') + ';background:' + (isWin ? 'rgba(0,229,160,0.04)' : 'rgba(255,77,106,0.04)') + ';font-family:Space Mono,monospace;font-size:10px';
+  entry.innerHTML = '<div style="display:flex;justify-content:space-between"><span style="color:' + (trade.signal==='BUY'?'var(--accent)':'var(--danger)') + '">' + trade.signal + ' #' + trade.id + '</span><span style="color:' + (isWin?'var(--accent)':'var(--danger)') + '">' + (isWin?'+$':'-$') + Math.abs(pnl).toFixed(2) + '</span></div><div style="color:var(--muted);font-size:9px;margin-top:3px">Entrada: ' + trade.entryPrice.toFixed(INSTRUMENTS[currentInst].decimals) + ' · SL:' + trade.sl + ' TP:' + trade.tp + '</div>';
+  container.insertBefore(entry, container.firstChild);
+}
+
+function clearShadowLog() {
+  shadowTrades=[]; shadowWins=0; shadowLosses=0; shadowProfit=0; shadowSlippageSum=0;
+  var container = document.getElementById('shadowLogContainer');
+  if(container) container.innerHTML = '<div style="font-size:10px;color:var(--muted);font-family:Space Mono,monospace;text-align:center;padding:20px">Sin operaciones shadow aún</div>';
+  updateShadowStats();
+  addLog('👻 Shadow log limpiado', 'warn');
+}
+
+// ======================== STEP SIZE — BINANCE LOT SIZE ========================
+let symbolStepSize = {};
+
+async function fetchStepSize(symbol) {
+  if(symbolStepSize[symbol]) return symbolStepSize[symbol];
+  try {
+    var url = 'https://api.binance.com/api/v3/exchangeInfo?symbol=' + symbol;
+    var res = await fetch(url);
+    var data = await res.json();
+    var filters = data.symbols[0].filters;
+    for(var i = 0; i < filters.length; i++) {
+      if(filters[i].filterType === 'LOT_SIZE') {
+        var step = parseFloat(filters[i].stepSize);
+        symbolStepSize[symbol] = step;
+        addLog('📐 StepSize ' + symbol + ': ' + step, 'opt');
+        return step;
+      }
+    }
+  } catch(e) { console.warn('fetchStepSize error:', e); }
+  return null;
+}
+
+function roundStepSize(quantity, stepSize) {
+  if(!stepSize || stepSize <= 0) return quantity;
+  var precision = Math.round(-Math.log10(stepSize));
+  var factor = Math.pow(10, precision);
+  return Math.floor(quantity * factor) / factor;
+}
+
+// ======================== POSITION SIZING DINÁMICO ========================
+const MIN_NOTIONAL_USD = 10; // Binance mínimo por orden
+
+function calcDynamicPositionSize(riskUSD, atrPrice, stepSize) {
+  if(!atrPrice || atrPrice <= 0) return tradeAmount;
+  var raw = riskUSD / atrPrice;
+  if(stepSize) raw = roundStepSize(raw, stepSize);
+  if(raw <= 0) return null;
+  // Validación minNotional — precio actual * cantidad debe superar $10
+  var currentPrice = prices.length > 0 ? prices[prices.length-1] : 0;
+  if(currentPrice > 0 && (currentPrice * raw) < MIN_NOTIONAL_USD) {
+    addLog('⚠ Orden cancelada — notional $' + (currentPrice * raw).toFixed(2) + ' < mínimo $' + MIN_NOTIONAL_USD, 'warn');
+    return null;
+  }
+  return raw;
+}
+
+// ======================== EXPORT / IMPORT BRAIN ========================
+function exportBrain() {
+  var brain = {
+    version: 'v24.1',
+    exportedAt: new Date().toISOString(),
+    aiWeights,
+    aiThreshold,
+    nnWeights1,
+    nnWeights2,
+    nnBias1,
+    nnBias2,
+    nnSamples,
+    nnLearningRate,
+    recentResults,
+    consecutiveWins,
+    consecutiveLoss,
+    momentumBonus,
+    tradeHistory: tradeHistory.slice(0, 200),
+    wins, losses, trades
+  };
+  var json = JSON.stringify(brain, null, 2);
+  var blob = new Blob([json], { type: 'application/json' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href = url;
+  a.download = 'forexbot_brain_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  addLog('🧠 Cerebro exportado — ' + nnSamples + ' muestras · ' + tradeHistory.length + ' operaciones', 'opt');
+}
+
+function importBrain() {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = function(e) {
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var brain = JSON.parse(ev.target.result);
+        if(brain.aiWeights)        Object.assign(aiWeights, brain.aiWeights);
+        if(brain.aiThreshold)      aiThreshold = brain.aiThreshold;
+        if(brain.nnWeights1)       nnWeights1 = brain.nnWeights1;
+        if(brain.nnWeights2)       nnWeights2 = brain.nnWeights2;
+        if(brain.nnBias1)          nnBias1 = brain.nnBias1;
+        if(brain.nnBias2)          nnBias2 = brain.nnBias2;
+        if(brain.nnSamples)        nnSamples = brain.nnSamples;
+        if(brain.nnLearningRate)   nnLearningRate = brain.nnLearningRate;
+        if(brain.recentResults)    recentResults = brain.recentResults;
+        if(brain.consecutiveWins !== undefined) consecutiveWins = brain.consecutiveWins;
+        if(brain.consecutiveLoss !== undefined) consecutiveLoss = brain.consecutiveLoss;
+        if(brain.momentumBonus !== undefined)   momentumBonus = brain.momentumBonus;
+        if(brain.tradeHistory)     tradeHistory = brain.tradeHistory;
+        if(brain.wins !== undefined)   wins = brain.wins;
+        if(brain.losses !== undefined) losses = brain.losses;
+        if(brain.trades !== undefined) trades = brain.trades;
+        updateAIDisplay();
+        updateHistorySummary();
+        addLog('🧠 Cerebro importado — versión ' + (brain.version||'?') + ' · ' + (brain.nnSamples||0) + ' muestras', 'opt');
+      } catch(err) {
+        addLog('❌ Error al importar cerebro — archivo inválido', 'sell');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }
 
 // ======================== WAKE LOCK ========================
@@ -4262,7 +4647,7 @@ function startPing() {
     // Ping silencioso — mantiene el proceso vivo en el navegador
     const ts = Date.now();
     try { localStorage.setItem('forexbot_ping', ts); } catch(e) {}
-  }, 20000); // cada 20 segundos
+  }, 5000); // cada 5 segundos — PC edition
 }
 
 function stopPing() {
