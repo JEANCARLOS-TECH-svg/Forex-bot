@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ForexBot v24.10.2 — PC Edition</title>
+<title>ForexBot v24.10.4 — PC Edition</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -1012,7 +1012,7 @@
       <div class="logo-icon">⚡</div>
       <div>
         <h1>Forex<span>Bot</span></h1>
-        <small>v24.10.2 — PC Edition</small>
+        <small>v24.10.4 — PC Edition</small>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -1569,6 +1569,14 @@
           <div id="atrDisplay" style="margin-top:8px"></div>
           <!-- Stochastic RSI -->
           <div id="stochDisplay" style="margin-top:6px"></div>
+        </div>
+
+        <!-- CAPA 0: PANEL DE SENTIMIENTO DE NOTICIAS -->
+        <div class="panel" style="padding:12px" id="newsPanelWrap">
+          <div class="panel-title" style="margin-bottom:8px">📰 Sentimiento del Mercado</div>
+          <div id="newsPanel" style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace">
+            Conectando con noticias...
+          </div>
         </div>
 
         <!-- DIAGNÓSTICO -->
@@ -2149,10 +2157,10 @@ function updateWsBadge() {
   }
 }
 
-/** Pre-load 100 historical candles from Binance Real — incluye volumen para PVT */
+/** Pre-load 500 historical candles from Binance Real — contexto amplio para ADX, PVT y tendencia */
 function preloadHistoricalCandles(symbol, callback) {
-  var url = 'https://api.binance.com/api/v3/klines?symbol=' + symbol + '&interval=1m&limit=100';
-  addLog('Cargando historial ' + symbol + '...', 'warn');
+  var url = 'https://api.binance.com/api/v3/klines?symbol=' + symbol + '&interval=1m&limit=500';
+  addLog('Cargando 500 velas históricas — ' + symbol + ' (contexto completo)...', 'warn');
   fetch(url)
     .then(function(res) { return res.json(); })
     .then(function(data) {
@@ -2165,7 +2173,7 @@ function preloadHistoricalCandles(symbol, callback) {
       }
       prices  = historical;
       volumes = historicalVol;
-      addLog(historical.length + ' velas historicas cargadas con volumen — PVT listo', 'buy');
+      addLog('✅ ' + historical.length + ' velas históricas cargadas — contexto de ' + Math.round(historical.length/60) + 'h | PVT + ADX + tendencia listos', 'buy');
       if(callback) callback();
     })
     .catch(function() {
@@ -2435,6 +2443,128 @@ const INSTRUMENTS = {
 let currentInst='EUR/USD', currentCat='forex';
 let running=false, interval=null, tickWorker=null, prices=[], volumes=[], logCount=0;
 let trades=0, wins=0, losses=0, lastSignal='none';
+
+// ── CAPA 0: SENTIMIENTO DE NOTICIAS ─────────────────────────────
+let newsSentiment  = 0;      // -1 negativo | 0 neutral | 1 positivo
+let newsConfBonus  = 0;      // Modificador: -10 a +5 sobre umbral
+let newsLastFetch  = 0;      // Timestamp último fetch
+let newsLastTitle  = '—';    // Última noticia relevante
+let newsCount      = { pos: 0, neg: 0, neu: 0 }; // Conteo de noticias
+const NEWS_INTERVAL_MS = 300000; // Auto-fetch cada 5 minutos
+
+// Palabras clave de sentimiento
+const NEWS_POSITIVE = ['adopt','bull','ath','partnership','approve','etf','institutional','launch','upgrade','record','growth','legal','invest'];
+const NEWS_NEGATIVE = ['ban','hack','crash','lawsuit','sec','fraud','scam','fear','regulation','restrict','fine','collapse','dump','bear'];
+
+function analyzeNewsSentiment(articles, symbol) {
+  var pos = 0, neg = 0, neu = 0;
+  var lastTitle = '—';
+  var ticker = symbol.replace('USDT','').toLowerCase();
+
+  articles.forEach(function(a) {
+    var title = (a.title || '').toLowerCase();
+    // Solo noticias relevantes al activo actual
+    if(!title.includes(ticker) && !title.includes('bitcoin') && !title.includes('crypto') && !title.includes('btc')) {
+      if(ticker !== 'btc') return;
+    }
+    var isPos = NEWS_POSITIVE.some(function(w){ return title.includes(w); });
+    var isNeg = NEWS_NEGATIVE.some(function(w){ return title.includes(w); });
+    if(isPos && !isNeg) pos++;
+    else if(isNeg && !isPos) neg++;
+    else neu++;
+    if(lastTitle === '—') lastTitle = a.title || '—';
+  });
+
+  newsCount = { pos: pos, neg: neg, neu: neu };
+  newsLastTitle = lastTitle;
+
+  var total = pos + neg + neu || 1;
+  var score = (pos - neg) / total;
+
+  if(score > 0.2)       { newsSentiment = 1;  newsConfBonus = 5;   }
+  else if(score < -0.2) { newsSentiment = -1; newsConfBonus = -10; }
+  else                  { newsSentiment = 0;  newsConfBonus = 0;   }
+
+  updateNewsPanel();
+  addLog('📰 Noticias: +' + pos + ' positivas | -' + neg + ' negativas | Sentimiento: ' + (newsSentiment===1?'ALCISTA':newsSentiment===-1?'BAJISTA':'NEUTRAL') + ' | Bono: ' + (newsConfBonus>0?'+':'') + newsConfBonus + '%', 'opt');
+}
+
+function fetchNewsSentiment() {
+  var inst = INSTRUMENTS[currentInst];
+  if(!inst) return;
+  var bSym = BINANCE_SYMBOLS[currentInst] || 'BTCUSDT';
+  newsLastFetch = Date.now();
+
+  // CryptoPanic API pública — sin API Key requerida
+  var url = 'https://cryptopanic.com/api/free/v1/posts/?auth_token=free&currencies=' + bSym.replace('USDT','') + '&kind=news&public=true';
+
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data && data.results && data.results.length > 0) {
+        analyzeNewsSentiment(data.results, bSym);
+      } else {
+        // Fallback: Binance announcements
+        fetchBinanceAnnouncements(bSym);
+      }
+    })
+    .catch(function(){
+      fetchBinanceAnnouncements(bSym);
+    });
+}
+
+function fetchBinanceAnnouncements(symbol) {
+  var url = 'https://www.binance.com/bapi/composite/v1/public/marketing/article/list/query?type=1&pageNo=1&pageSize=10';
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data && data.data && data.data.articles) {
+        analyzeNewsSentiment(data.data.articles, symbol);
+      }
+    })
+    .catch(function(){
+      addLog('📰 Sin conexión a noticias — sentimiento neutral', 'warn');
+    });
+}
+
+function updateNewsPanel() {
+  var panel = document.getElementById('newsPanel');
+  if(!panel) return;
+
+  var sentColor = newsSentiment === 1 ? 'var(--accent)' : newsSentiment === -1 ? 'var(--danger)' : 'var(--warn)';
+  var sentText  = newsSentiment === 1 ? '📈 ALCISTA' : newsSentiment === -1 ? '📉 BAJISTA' : '⏸ NEUTRAL';
+  var total = newsCount.pos + newsCount.neg + newsCount.neu || 1;
+  var pctPos = Math.round(newsCount.pos / total * 100);
+  var pctNeg = Math.round(newsCount.neg / total * 100);
+
+  panel.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+      '<span style="font-size:10px;font-family:Space Mono,monospace;color:var(--muted);letter-spacing:1px">SENTIMIENTO MERCADO</span>' +
+      '<span style="font-size:11px;font-weight:700;color:' + sentColor + '">' + sentText + '</span>' +
+    '</div>' +
+    '<div style="display:flex;gap:4px;margin-bottom:8px;height:6px;border-radius:3px;overflow:hidden">' +
+      '<div style="width:' + pctPos + '%;background:var(--accent);"></div>' +
+      '<div style="width:' + pctNeg + '%;background:var(--danger);"></div>' +
+      '<div style="flex:1;background:var(--border)"></div>' +
+    '</div>' +
+    '<div style="display:flex;justify-content:space-between;font-size:9px;font-family:Space Mono,monospace;margin-bottom:8px">' +
+      '<span style="color:var(--accent)">▲ ' + newsCount.pos + ' positivas</span>' +
+      '<span style="color:var(--muted)">● ' + newsCount.neu + ' neutras</span>' +
+      '<span style="color:var(--danger)">▼ ' + newsCount.neg + ' negativas</span>' +
+    '</div>' +
+    '<div style="font-size:9px;color:var(--text2);line-height:1.4;border-top:1px solid var(--border);padding-top:6px">' +
+      '📰 ' + (newsLastTitle.length > 60 ? newsLastTitle.substring(0,60)+'...' : newsLastTitle) +
+    '</div>' +
+    '<div style="font-size:8px;color:var(--muted);margin-top:4px;text-align:right">' +
+      'Bono umbral: <span style="color:' + sentColor + '">' + (newsConfBonus>0?'+':'') + newsConfBonus + '%</span> · ' +
+      'Próx. actualización: 5min' +
+    '</div>';
+}
+
+function startNewsAutoFetch() {
+  fetchNewsSentiment(); // Fetch inmediato al arrancar
+  setInterval(fetchNewsSentiment, NEWS_INTERVAL_MS); // Cada 5 minutos
+}
 let rsiHistory=[], macdHistory=[], macdSigHistory=[], macdHistHistory=[];
 
 function selInst(btn, sym, cat) {
@@ -3561,6 +3691,8 @@ function getSignal(rsi, macd, cfg) {
   // Umbral dinámico — se ajusta según aceleración del ADX y Bollinger
   var dynamicThresh = calcularUmbralDinamico(regime.adx, bbWidth);
   var nThresh = Math.min(dynamicThresh, Math.max(14, (22-momentumBonus*0.2)*(1/activePirateMult)));
+  // Capa 0 — ajuste por sentimiento de noticias
+  nThresh = Math.max(10, nThresh - newsConfBonus);
 
   // PVT suavizado con WMA
   var pvtSmooth = calcPVTSmoothed();
@@ -4528,6 +4660,7 @@ async function startBot(){
   startWatchdog();
   startPing();
   await requestWakeLock();
+  startNewsAutoFetch(); // Capa 0 — sentimiento de noticias automático
 
   // Obtener stepSize del instrumento actual desde Binance
   var inst = INSTRUMENTS[currentInst];
@@ -5458,7 +5591,7 @@ function tgHandleCommand(cmd) {
     var mode = trainingMode ? 'Entrenamiento' : freedomMode ? 'Libertad Absoluta' : 'Normal';
     var estado = running ? '🟢 ACTIVO' : '🔴 INACTIVO';
     tgSend(
-      '<b>ForexBot v24.10.2</b>\n' +
+      '<b>ForexBot v24.10.4</b>\n' +
       'Estado: ' + estado + '\n' +
       'Modo: ' + mode + '\n' +
       'Instrumento: ' + currentInst + '\n' +
@@ -5528,7 +5661,7 @@ function toggleTelegram() {
     telegramInterval = setInterval(tgPollCommands, 3000);
     if(btn)   { btn.style.borderColor='rgba(0,136,204,0.6)'; btn.style.background='rgba(0,136,204,0.12)'; }
     if(state) { state.textContent='ACTIVO'; state.style.color='#0088cc'; }
-    tgSend('✅ ForexBot v24.10.2 conectado.\nEscribe /help para ver los comandos.');
+    tgSend('✅ ForexBot v24.10.4 conectado.\nEscribe /help para ver los comandos.');
     addLog('📱 Telegram ACTIVO — control remoto habilitado', 'buy');
   } else {
     clearInterval(telegramInterval);
